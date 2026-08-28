@@ -14,6 +14,9 @@ export interface DenialDetails {
 export interface EvidenceDocument {
   readonly id: string;
   readonly title: string;
+  readonly source: string;
+  readonly date: string;
+  readonly status: "Verified" | "Dates incomplete" | "Insurer source";
 }
 
 export interface AdministrativeRequirement {
@@ -29,6 +32,9 @@ export interface PatientCase extends DenialDetails {
     readonly location: string;
   };
   readonly plain_language_explanation: string;
+  readonly requested_by: string;
+  readonly requested_date: string;
+  readonly days_remaining: number;
   readonly evidence: readonly EvidenceDocument[];
   readonly readiness: readonly AdministrativeRequirement[];
 }

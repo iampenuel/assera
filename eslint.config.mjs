@@ -35,6 +35,11 @@ const eslintConfig = defineConfig([
         version: "detect",
       },
     },
+    rules: {
+      // vinext's current client router fails internal Link navigation in the
+      // production worker; native anchors provide reliable, accessible routing.
+      "@next/next/no-html-link-for-pages": "off",
+    },
   },
 ]);
 

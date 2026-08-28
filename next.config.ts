@@ -1,7 +1,3 @@
-import type { NextConfig } from "next";
-
-const nextConfig: NextConfig = {
-  /* config options here */
-};
-
-export default nextConfig;
+// Keep this module dependency-free so vinext can load it without resolving the
+// full Next.js compatibility package during local startup.
+export default {};

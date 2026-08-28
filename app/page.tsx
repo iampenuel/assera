@@ -1,11 +1,18 @@
 import type { Metadata } from "next";
-import { CaseDashboard } from "../components/case-dashboard";
+import { EditorialSections } from "../components/landing/editorial-sections";
+import { Hero } from "../components/landing/hero";
 
 export const metadata: Metadata = {
-  title: "Case NS-PA-48291",
-  description: "Understand your denial and prepare a clear next step.",
+  title: { absolute: "ASSERA — A denial isn’t the final word." },
+  description:
+    "Understand a prior-authorization denial, see what is missing, and prepare the next step while staying in control.",
 };
 
 export default function Home() {
-  return <CaseDashboard />;
+  return (
+    <main className="landing-page">
+      <Hero />
+      <EditorialSections />
+    </main>
+  );
 }
