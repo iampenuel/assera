@@ -31,9 +31,16 @@ test("server-renders the public ASSERA landing page", async () => {
   assert.match(html, /PATIENT-SIDE HEALTHCARE ACCESS/);
   assert.match(html, /A denial isn(?:&#x27;|&apos;|')t/);
   assert.match(html, /Open Maya(?:&#x27;|&apos;|')s case/);
+  assert.match(html, /WHY THIS MATTERS/);
+  assert.match(html, /4\.1M/);
+  assert.match(html, /11\.5%/);
+  assert.match(html, /80\.7%/);
+  assert.match(html, /KFF analysis of CMS Medicare Advantage data, 2024/);
   assert.match(html, /HOW IT WORKS/);
   assert.match(html, /Clarity before automation/);
   assert.match(html, /Agency stays with you/);
+  assert.match(html, /Built for the WebMCP Challenge/);
+  assert.match(html, /© 2026 ASSERA/);
   assert.match(html, /\/media\/assera-hero-background\.png/);
   assert.match(html, /\/brand\/assera-mark-ivory\.png/);
   assert.doesNotMatch(html, /Private case workspace|get_denial_details/);

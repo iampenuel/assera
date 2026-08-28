@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import type { AgentActivity, WebMCPStatus } from "../../types/case";
 import { registerDenialDetailsTool } from "../../webmcp/denial-tools";
+import { AsseraLogo } from "../brand/assera-logo";
 import { CaseMain } from "./case-main";
 import { RightRail } from "./right-rail";
 import { CaseNavigation, Sidebar } from "./sidebar";
@@ -54,6 +55,7 @@ export function CaseDashboard() {
     <main className="case-shell">
       <Sidebar activityCount={activities.length} />
       <header className="case-topbar">
+        <AsseraLogo className="case-mobile-logo" />
         <details className="case-mobile-menu">
           <summary>Case menu</summary>
           <CaseNavigation mobile activityCount={activities.length} />

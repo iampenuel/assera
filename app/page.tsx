@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { EditorialSections } from "../components/landing/editorial-sections";
+import { EditorialSections, SiteFooter } from "../components/landing/editorial-sections";
 import { Hero } from "../components/landing/hero";
 
 export const metadata: Metadata = {
@@ -10,9 +10,12 @@ export const metadata: Metadata = {
 
 export default function Home() {
   return (
-    <main className="landing-page">
-      <Hero />
-      <EditorialSections />
-    </main>
+    <div className="landing-page">
+      <main>
+        <Hero />
+        <EditorialSections />
+      </main>
+      <SiteFooter />
+    </div>
   );
 }
