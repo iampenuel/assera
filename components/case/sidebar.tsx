@@ -6,6 +6,7 @@ interface CaseNavigationProps {
   readonly evidenceCount: number;
   readonly readiness: AppealReadiness;
   readonly hasDraft: boolean;
+  readonly hasSubmission: boolean;
   readonly mobile?: boolean;
 }
 
@@ -14,6 +15,7 @@ export function CaseNavigation({
   evidenceCount,
   readiness,
   hasDraft,
+  hasSubmission,
   mobile = false,
 }: CaseNavigationProps) {
   const items = [
@@ -30,6 +32,9 @@ export function CaseNavigation({
           { href: "#appeal-workspace", label: "Appeal draft" },
           { href: "#appeal-package-review", label: "Review package" },
         ]
+      : []),
+    ...(hasSubmission
+      ? [{ href: "#simulated-submission-receipt", label: "Simulated receipt" }]
       : []),
   ];
 

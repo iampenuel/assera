@@ -12,6 +12,7 @@ import type {
 interface TreatmentDatePanelProps {
   readonly confirmation: TreatmentDateConfirmation | null;
   readonly open: boolean;
+  readonly locked?: boolean;
   readonly onOpen: () => void;
   readonly onCancel: () => void;
   readonly onConfirm: (
@@ -25,11 +26,12 @@ const DEMO_TREATMENT_END_DATE = "2026-08-19";
 export function TreatmentDatePanel({
   confirmation,
   open,
+  locked = false,
   onOpen,
   onCancel,
   onConfirm,
 }: TreatmentDatePanelProps) {
-  if (!open) {
+  if (!open || locked) {
     return (
       <section
         id="treatment-dates"
@@ -62,10 +64,14 @@ export function TreatmentDatePanel({
             </p>
           )}
         </div>
-        <button type="button" onClick={onOpen}>
-          {confirmation ? "Edit confirmed dates" : "Confirm dates"}{" "}
-          <span aria-hidden="true">→</span>
-        </button>
+        {locked ? (
+          <span className="finalized-field-label">LOCKED AFTER SIMULATION</span>
+        ) : (
+          <button type="button" onClick={onOpen}>
+            {confirmation ? "Edit confirmed dates" : "Confirm dates"}{" "}
+            <span aria-hidden="true">→</span>
+          </button>
+        )}
       </section>
     );
   }

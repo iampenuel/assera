@@ -2,11 +2,13 @@
 
 import { useState } from "react";
 import { AppealApprovalError } from "../../domain/appeal-package";
+import { SubmissionError } from "../../domain/simulated-payer";
 import { formatIsoDate, formatIsoTimestamp } from "../../domain/format-date";
 import type {
   AppealApproval,
   AppealPackagePreview,
   SharedInformationSource,
+  SubmitAppealResult,
 } from "../../types/case";
 
 const sourceLabels: Record<SharedInformationSource, string> = {
@@ -23,6 +25,7 @@ interface AppealPackageReviewProps {
     confirmation: boolean,
   ) => AppealApproval;
   readonly onRevoke: () => boolean;
+  readonly onSubmit: () => SubmitAppealResult;
 }
 
 function displaySharedValue(
@@ -44,10 +47,12 @@ export function AppealPackageReview({
   preview,
   onApprove,
   onRevoke,
+  onSubmit,
 }: AppealPackageReviewProps) {
   const [confirmed, setConfirmed] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const isApproved = preview.approval.status === "approved";
+  const isSubmitted = preview.submission_status === "submitted_simulation";
 
   const handleApprove = () => {
     setError(null);
@@ -62,10 +67,23 @@ export function AppealPackageReview({
     }
   };
 
+  const handleSubmit = () => {
+    setError(null);
+    try {
+      onSubmit();
+    } catch (caught) {
+      setError(
+        caught instanceof SubmissionError
+          ? caught.message
+          : "The simulation could not be recorded. Review the current package and approval references.",
+      );
+    }
+  };
+
   return (
     <section
       id="appeal-package-review"
-      className={`appeal-package-review ${isApproved ? "is-approved" : ""}`}
+      className={`appeal-package-review ${isApproved ? "is-approved" : ""} ${isSubmitted ? "is-submitted" : ""}`}
       tabIndex={-1}
       aria-labelledby="appeal-package-review-title"
       aria-live="polite"
@@ -73,14 +91,19 @@ export function AppealPackageReview({
       <div className="package-review-heading">
         <div>
           <p className="package-eyebrow">
-            {isApproved
-              ? "APPROVED LOCALLY — NOT SUBMITTED"
+            {isSubmitted
+              ? "SIMULATED SUBMISSION RECORDED"
+              : isApproved
+                ? "APPROVED LOCALLY — NOT SUBMITTED"
               : "REVIEW — NOT SUBMITTED"}
           </p>
-          <h2 id="appeal-package-review-title">Review the appeal package</h2>
+          <h2 id="appeal-package-review-title">
+            {isSubmitted ? "Submitted package locked" : "Review the appeal package"}
+          </h2>
           <p>
-            Review exactly what would be shared with Northstar Health during a
-            future simulated submission.
+            {isSubmitted
+              ? "This exact package snapshot is retained with the immutable simulated receipt."
+              : "Review exactly what would be shared with Northstar Health during a future simulated submission."}
           </p>
         </div>
         <span className="package-version">Package v{preview.draft_version}</span>
@@ -172,20 +195,36 @@ export function AppealPackageReview({
             <h3 id="approval-status-title">Approval status</h3>
             {isApproved ? (
               <div className="approved-state">
-                <p className="approved-state-label">APPROVED LOCALLY — NOT SUBMITTED</p>
+                <p className="approved-state-label">
+                  {isSubmitted ? "APPROVAL RETAINED · PACKAGE FINALIZED" : "APPROVED LOCALLY — NOT SUBMITTED"}
+                </p>
                 <dl>
                   <div><dt>Approved by</dt><dd>{preview.approval.approved_by}</dd></div>
                   <div><dt>Approved at</dt><dd>{formatIsoTimestamp(preview.approval.approved_at)}</dd></div>
                   <div><dt>Package version</dt><dd>v{preview.draft_version}</dd></div>
+                  <div><dt>Approval ID</dt><dd>{preview.approval.approval_id}</dd></div>
                 </dl>
                 <p>
-                  Maya approved this exact package version for a future simulated
-                  submission. Nothing has been sent.
+                  {isSubmitted
+                    ? "Maya's human approval remains part of the audit record. It cannot be revoked after finalization."
+                    : "Maya approved this exact package version for a future simulated submission. Nothing has been sent."}
                 </p>
                 <div className="approved-actions">
                   <a href="#package-statement">Review approved package</a>
-                  <button type="button" onClick={onRevoke}>Revoke approval</button>
+                  {isSubmitted ? null : (
+                    <>
+                      <button className="simulation-action" type="button" onClick={handleSubmit}>
+                        Run simulated submission
+                      </button>
+                      <button type="button" onClick={onRevoke}>Revoke approval</button>
+                    </>
+                  )}
                 </div>
+                {!isSubmitted ? (
+                  <p className={`form-message ${error ? "is-error" : ""}`} role={error ? "alert" : "status"}>
+                    {error ?? "Human fallback: this records a local simulation only."}
+                  </p>
+                ) : null}
               </div>
             ) : (
               <fieldset className="approval-fieldset">
@@ -220,9 +259,15 @@ export function AppealPackageReview({
         </section>
       </div>
 
-      <div className="package-not-submitted">
-        <strong>Nothing has been submitted.</strong>
-        <span>No submission tool exists in this milestone.</span>
+      <div className={isSubmitted ? "package-submitted" : "package-not-submitted"}>
+        <strong>
+          {isSubmitted ? "Simulated submission recorded." : "Nothing has been submitted."}
+        </strong>
+        <span>
+          {isSubmitted
+            ? "No real insurer was contacted. The package and approval are now immutable."
+            : "Simulation becomes available only after Maya approves this exact package."}
+        </span>
       </div>
     </section>
   );

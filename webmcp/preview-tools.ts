@@ -33,13 +33,28 @@ export function previewAppeal(
     ...(preview.approval.status === "approved"
       ? {
           approval: {
+            approval_id: preview.approval.approval_id,
             approved_at: preview.approval.approved_at,
             approved_by: preview.approval.approved_by,
             package_version: preview.approval.package_version,
           },
         }
       : {}),
-    submission_status: "not_submitted",
+    submission_status: preview.submission_status,
+    ...(preview.submission
+      ? {
+          submission: {
+            submission_id: preview.submission.id,
+            submitted_at: preview.submission.submitted_at,
+            approval_id: preview.submission.approval_id,
+            receipt: preview.submission.receipt,
+            real_insurer_contacted:
+              preview.submission.destination.real_insurer_contacted,
+            external_network_request:
+              preview.submission.external_network_request,
+          },
+        }
+      : {}),
     external_submission: false,
     synthetic: true,
   };

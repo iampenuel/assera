@@ -1,6 +1,7 @@
 import type {
   AppealApproval,
   AppealPackagePreview,
+  AppealPackageSnapshot,
   CaseWorkspaceSnapshot,
   WorkspaceActor,
 } from "../types/case";
@@ -42,9 +43,9 @@ function packageNotReady(): never {
   );
 }
 
-export function buildAppealPackagePreview(
+function buildCurrentAppealPackageSnapshot(
   snapshot: CaseWorkspaceSnapshot,
-): AppealPackagePreview {
+): AppealPackageSnapshot {
   const draft = snapshot.appealDraft;
   const confirmation = snapshot.treatmentDateConfirmation;
 
@@ -182,6 +183,7 @@ export function buildAppealPackagePreview(
     approval: approval
       ? {
           status: "approved",
+          approval_id: approval.id,
           approved_at: approval.approved_at,
           approved_by: approval.approved_by.name,
           package_version: approval.package_version,
@@ -191,12 +193,37 @@ export function buildAppealPackagePreview(
   };
 }
 
+export function buildAppealPackagePreview(
+  snapshot: CaseWorkspaceSnapshot,
+): AppealPackagePreview {
+  if (snapshot.appealSubmission) {
+    const submission = snapshot.appealSubmission;
+    return {
+      ...submission.package_snapshot,
+      status: "submitted_simulation",
+      submission_status: "submitted_simulation",
+      submission: {
+        id: submission.id,
+        submitted_at: submission.submitted_at,
+        submitted_by: submission.submitted_by,
+        destination: submission.destination,
+        approval_id: submission.approval_id,
+        receipt: submission.receipt,
+        external_network_request: submission.external_network_request,
+      },
+    };
+  }
+
+  return buildCurrentAppealPackageSnapshot(snapshot);
+}
+
 export function approveAppealPackage(
   snapshot: CaseWorkspaceSnapshot,
   packageVersion: string,
   confirmation: boolean,
   actor: WorkspaceActor,
   approvedAt: string,
+  approvalId = `approval-${approvedAt}`,
 ): AppealApproval {
   if (actor !== "HUMAN") {
     throw new AppealApprovalError(
@@ -233,6 +260,7 @@ export function approveAppealPackage(
   }
 
   return {
+    id: approvalId,
     case_id: preview.case_id,
     package_id: preview.package_id,
     package_version: preview.package_version,

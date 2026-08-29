@@ -78,7 +78,7 @@ test("server-renders Maya's complete denial dashboard on the case route", async 
   assert.match(html, /Treatment dates need confirmation/);
   assert.match(html, /fictional Northstar Health policy/);
   assert.match(html, /Confirm treatment dates before an appeal draft can be prepared/);
-  assert.match(html, /No submission tool exists\. Nothing can be sent in this milestone/);
+  assert.match(html, /Maya must approve the exact current package before simulated ACT is available/);
   assert.match(html, /No workspace activity yet/);
   assert.match(html, /Review &amp; confirm dates/);
   assert.match(html, /Treatment dates need confirmation/);
@@ -86,7 +86,7 @@ test("server-renders Maya's complete denial dashboard on the case route", async 
   assert.match(html, /PREPARE/);
   assert.match(html, /Blocked/);
   assert.match(html, /ACT/);
-  assert.match(html, /Not available/);
+  assert.match(html, /ACT/);
   assert.doesNotMatch(html, /DRAFT — NOT SUBMITTED|Save changes|Submit appeal/);
   assert.match(html, /(?:\/|%2F)brand(?:\/|%2F)assera-mark-espresso\.png/);
   assert.doesNotMatch(html, /codex-preview|react-loading-skeleton/i);

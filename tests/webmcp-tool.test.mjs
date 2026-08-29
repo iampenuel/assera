@@ -25,6 +25,7 @@ const validDates = {
 function createTestWorkspace() {
   let state = caseTools.createInitialCaseWorkspaceState(validInput.case_id);
   let tick = 0;
+  let idTick = 0;
   const adapters = caseTools.createCaseWorkspaceAdapters({
     getState: () => state,
     applyAction: (action) => {
@@ -32,6 +33,7 @@ function createTestWorkspace() {
       return state;
     },
     now: () => `2026-08-29T12:${String(tick++).padStart(2, "0")}:00.000Z`,
+    createId: (kind) => `${kind}-test-${idTick++}`,
   });
   return { ...adapters, getState: () => state };
 }
@@ -43,6 +45,33 @@ function assertCaseToolError(action, code, message) {
     assert.equal(error.message, message);
     return true;
   });
+}
+
+function createApprovedWorkspace() {
+  const workspace = createTestWorkspace();
+  workspace.uiActions.confirmTreatmentDates(validDates);
+  workspace.uiActions.prepareAppeal();
+  const preview = caseTools.buildAppealPackagePreview(
+    workspace.toolAdapter.getSnapshot(),
+  );
+  const approval = workspace.uiActions.approveAppealPackage(
+    preview.package_version,
+    true,
+  );
+  return {
+    ...workspace,
+    preview: caseTools.buildAppealPackagePreview(
+      workspace.toolAdapter.getSnapshot(),
+    ),
+    approval,
+    submitInput: {
+      case_id: validInput.case_id,
+      package_id: preview.package_id,
+      package_version: preview.package_version,
+      approval_id: approval.id,
+      mode: "simulation",
+    },
+  };
 }
 
 test("Milestone 01 and 02 READ contracts remain unchanged", () => {
@@ -279,6 +308,7 @@ test("human approval records exact provenance and repeated approval is idempoten
   const repeated = uiActions.approveAppealPackage(preview.package_version, true);
 
   assert.equal(repeated, approval);
+  assert.equal(approval.id, "approval-test-0");
   assert.equal(toolAdapter.getSnapshot().activities.length, activityCount);
   assert.deepEqual(approval.approved_by, { type: "patient", name: "Maya Thompson" });
   assert.equal(approval.package_version, preview.package_version);
@@ -358,6 +388,7 @@ test("WebMCP receives a runtime adapter that cannot confirm, edit, approve, or r
     "prepareAppeal",
     "previewAppeal",
     "recordReadActivity",
+    "submitAppeal",
   ]);
   assert.equal("approveAppealPackage" in toolAdapter, false);
   assert.equal("revokeAppealApproval" in toolAdapter, false);
@@ -365,7 +396,7 @@ test("WebMCP receives a runtime adapter that cannot confirm, edit, approve, or r
   assert.equal("updateDraftStatement" in toolAdapter, false);
 });
 
-test("registers exactly six unique tools through one signal with five READ and one PREPARE", async () => {
+test("registers exactly seven unique tools through one signal with five READ, one PREPARE, and one ACT", async () => {
   const registeredTools = [];
   const registrationOptions = [];
   const statuses = [];
@@ -389,17 +420,24 @@ test("registers exactly six unique tools through one signal with five READ and o
     "get_coverage_requirements",
     "list_appeal_evidence",
     "check_appeal_readiness",
-    "prepare_appeal",
     "preview_appeal",
+    "prepare_appeal",
+    "submit_appeal",
   ]);
-  assert.equal(registeredTools.length, 6);
+  assert.equal(registeredTools.length, 7);
   assert.equal(registeredTools.filter(({ annotations }) => annotations.readOnlyHint).length, 5);
   assert.equal(registeredTools.find(({ name }) => name === "preview_appeal").annotations.untrustedContentHint, true);
   assert.equal(registeredTools.find(({ name }) => name === "prepare_appeal").annotations.readOnlyHint, false);
-  assert.equal(registeredTools.some(({ name }) => /approve|revoke|submit|send|status|act/i.test(name)), false);
+  assert.equal(registeredTools.find(({ name }) => name === "submit_appeal").annotations.readOnlyHint, false);
+  assert.equal(registeredTools.some(({ name }) => /approve|revoke|send|status|cancel|resubmit/i.test(name)), false);
   for (const tool of registeredTools) {
     assert.equal(tool.inputSchema.additionalProperties, false);
-    assert.deepEqual(tool.inputSchema.required, ["case_id"]);
+    assert.deepEqual(
+      tool.inputSchema.required,
+      tool.name === "submit_appeal"
+        ? ["case_id", "package_id", "package_version", "approval_id", "mode"]
+        : ["case_id"],
+    );
     assert.equal(tool.inputSchema.properties.case_id.const, validInput.case_id);
   }
   assert.deepEqual(statuses, ["available"]);
@@ -483,7 +521,232 @@ test("preview reflects approval and causes no focus, navigation, or scroll side 
   }
 });
 
-test("the no-WebMCP fallback preserves all human review and approval actions", async () => {
+test("pure simulated-submission validation enforces readiness, approval, and exact references without mutation", () => {
+  const empty = createTestWorkspace();
+  const emptySnapshot = empty.toolAdapter.getSnapshot();
+  const emptyBefore = JSON.stringify(emptySnapshot);
+  assert.throws(
+    () => caseTools.validateSimulatedSubmission(emptySnapshot, {
+      case_id: validInput.case_id,
+      package_id: "missing",
+      package_version: "missing",
+      approval_id: "missing",
+      mode: "simulation",
+    }),
+    (error) => error.code === "SUBMISSION_NOT_READY",
+  );
+  assert.equal(JSON.stringify(empty.toolAdapter.getSnapshot()), emptyBefore);
+
+  const ready = createTestWorkspace();
+  ready.uiActions.confirmTreatmentDates(validDates);
+  ready.uiActions.prepareAppeal();
+  const unapproved = caseTools.buildAppealPackagePreview(ready.toolAdapter.getSnapshot());
+  assert.throws(
+    () => caseTools.validateSimulatedSubmission(ready.toolAdapter.getSnapshot(), {
+      case_id: validInput.case_id,
+      package_id: unapproved.package_id,
+      package_version: unapproved.package_version,
+      approval_id: "missing",
+      mode: "simulation",
+    }),
+    (error) => error.code === "SUBMISSION_NOT_APPROVED",
+  );
+
+  const approved = createApprovedWorkspace();
+  for (const [field, value, code] of [
+    ["package_id", "wrong-package", "PACKAGE_ID_MISMATCH"],
+    ["package_version", "wrong-version", "PACKAGE_VERSION_MISMATCH"],
+    ["approval_id", "wrong-approval", "APPROVAL_ID_MISMATCH"],
+    ["mode", "live", "SIMULATION_MODE_REQUIRED"],
+  ]) {
+    assert.throws(
+      () => caseTools.validateSimulatedSubmission(
+        approved.toolAdapter.getSnapshot(),
+        { ...approved.submitInput, [field]: value },
+      ),
+      (error) => error.code === code,
+    );
+  }
+
+  const staleSnapshot = {
+    ...approved.toolAdapter.getSnapshot(),
+    appealApproval: {
+      ...approved.approval,
+      draft_version: approved.approval.draft_version + 1,
+    },
+  };
+  assert.throws(
+    () => caseTools.validateSimulatedSubmission(staleSnapshot, approved.submitInput),
+    (error) => error.code === "APPROVAL_STALE",
+  );
+});
+
+test("business submission failures create truthful blocked ACT activity", () => {
+  const workspace = createTestWorkspace();
+  workspace.uiActions.confirmTreatmentDates(validDates);
+  workspace.uiActions.prepareAppeal();
+  const preview = caseTools.buildAppealPackagePreview(workspace.toolAdapter.getSnapshot());
+  assert.throws(
+    () => workspace.toolAdapter.submitAppeal({
+      case_id: validInput.case_id,
+      package_id: preview.package_id,
+      package_version: preview.package_version,
+      approval_id: "missing",
+      mode: "simulation",
+    }),
+    (error) => error.code === "SUBMISSION_NOT_APPROVED",
+  );
+  const activity = workspace.toolAdapter.getSnapshot().activities.at(-1);
+  assert.equal(activity.category, "ACT");
+  assert.equal(activity.actor, "AGENT");
+  assert.equal(activity.outcome, "blocked");
+  assert.match(activity.impact, /No receipt recorded; no real insurer contacted/);
+  assert.equal(workspace.toolAdapter.getSnapshot().appealSubmission, null);
+});
+
+test("the authoritative command records one truthful simulated receipt without network access", () => {
+  const approved = createApprovedWorkspace();
+  const packageBefore = JSON.stringify(approved.preview);
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = () => assert.fail("Simulated ACT must not use the network");
+  try {
+    const result = approved.toolAdapter.submitAppeal(approved.submitInput);
+    const stored = approved.toolAdapter.getSnapshot().appealSubmission;
+    assert.equal(result.action, "submitted");
+    assert.equal(result.submission, stored);
+    assert.equal(stored.id, "submission-test-1");
+    assert.match(stored.receipt.confirmation_number, /^SIM-48291-V1-/);
+    assert.equal(stored.receipt.status, "recorded");
+    assert.equal(stored.submitted_by.provided_via, "WEBMCP");
+    assert.equal(stored.destination.real_insurer_contacted, false);
+    assert.equal(stored.external_network_request, false);
+    assert.equal(JSON.stringify(stored.package_snapshot), packageBefore);
+    assert.deepEqual(approved.toolAdapter.getSnapshot().activities.at(-1), {
+      id: "submit_appeal-2026-08-29T12:03:00.000Z-3",
+      title: "Simulated submission recorded",
+      category: "ACT",
+      actor: "AGENT",
+      outcome: "completed",
+      impact: "Immutable simulated receipt recorded in ASSERA; no real insurer contacted",
+      toolName: "submit_appeal",
+      occurredAt: "2026-08-29T12:03:00.000Z",
+    });
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test("exact retries and rapid concurrent calls reuse one immutable submission and receipt", async () => {
+  const repeated = createApprovedWorkspace();
+  const first = repeated.toolAdapter.submitAppeal(repeated.submitInput);
+  const second = repeated.toolAdapter.submitAppeal(repeated.submitInput);
+  assert.equal(first.action, "submitted");
+  assert.equal(second.action, "reused");
+  assert.equal(second.submission, first.submission);
+  assert.equal(second.submission.receipt, first.submission.receipt);
+  assert.equal(repeated.toolAdapter.getSnapshot().activities.at(-1).title, "Existing simulated receipt returned");
+
+  const concurrent = createApprovedWorkspace();
+  const [one, two] = await Promise.all([
+    Promise.resolve().then(() => concurrent.toolAdapter.submitAppeal(concurrent.submitInput)),
+    Promise.resolve().then(() => concurrent.toolAdapter.submitAppeal(concurrent.submitInput)),
+  ]);
+  assert.deepEqual([one.action, two.action], ["submitted", "reused"]);
+  assert.equal(one.submission, two.submission);
+  assert.equal(concurrent.toolAdapter.getSnapshot().appealSubmission, one.submission);
+});
+
+test("an execution AbortSignal stops ACT before commit with no receipt, activity, or state change", () => {
+  const approved = createApprovedWorkspace();
+  const before = JSON.stringify(approved.getState());
+  const controller = new AbortController();
+  controller.abort(new DOMException("Cancelled", "AbortError"));
+  assert.throws(
+    () => approved.toolAdapter.submitAppeal(approved.submitInput, controller.signal),
+    (error) => error.name === "AbortError",
+  );
+  assert.equal(JSON.stringify(approved.getState()), before);
+  assert.equal(approved.toolAdapter.getSnapshot().appealSubmission, null);
+});
+
+test("submitted package finalization blocks dates, edits, preparation, approval, and revocation", () => {
+  const approved = createApprovedWorkspace();
+  approved.toolAdapter.submitAppeal(approved.submitInput);
+  const operations = [
+    () => approved.uiActions.confirmTreatmentDates({ ...validDates, end_date: "2026-08-20" }),
+    () => approved.uiActions.updateDraftStatement("Changed after submission"),
+    () => approved.uiActions.prepareAppeal(),
+    () => approved.uiActions.approveAppealPackage(approved.preview.package_version, true),
+    () => approved.uiActions.revokeAppealApproval(),
+  ];
+  for (const operation of operations) {
+    assert.throws(operation, (error) => error.code === "SUBMISSION_FINALIZED");
+  }
+  assert.equal(approved.toolAdapter.getSnapshot().appealSubmission.status, "submitted_simulation");
+});
+
+test("preview after ACT uses the stored package snapshot and concise submission metadata", () => {
+  const approved = createApprovedWorkspace();
+  const result = approved.toolAdapter.submitAppeal(approved.submitInput);
+  const preview = caseTools.previewAppeal(validInput, approved.toolAdapter);
+  assert.equal(preview.submission_status, "submitted_simulation");
+  assert.equal(preview.statement, result.submission.package_snapshot.statement);
+  assert.equal(preview.submission.submission_id, result.submission.id);
+  assert.equal(preview.submission.receipt, result.submission.receipt);
+  assert.equal(preview.submission.real_insurer_contacted, false);
+  assert.equal(preview.submission.external_network_request, false);
+});
+
+test("submit_appeal has a strict reference-only schema, forwards cancellation, and returns compact output", async () => {
+  const approved = createApprovedWorkspace();
+  const registeredTools = [];
+  globalThis.document = {
+    modelContext: {
+      async registerTool(tool) {
+        registeredTools.push(tool);
+      },
+    },
+  };
+  const registration = await caseTools.registerCaseTools({
+    adapter: approved.toolAdapter,
+    onStatusChange: () => undefined,
+  });
+  const tool = registeredTools.find(({ name }) => name === "submit_appeal");
+  assert.deepEqual(Object.keys(tool.inputSchema.properties), [
+    "case_id",
+    "package_id",
+    "package_version",
+    "approval_id",
+    "mode",
+  ]);
+  assert.equal(tool.inputSchema.additionalProperties, false);
+  const activityCount = approved.toolAdapter.getSnapshot().activities.length;
+  assertCaseToolError(
+    () => tool.execute({ ...approved.submitInput, statement: "injected" }, { signal: new AbortController().signal }),
+    "INVALID_INPUT",
+    "Valid submission references are required.",
+  );
+  assert.equal(approved.toolAdapter.getSnapshot().activities.length, activityCount);
+
+  const controller = new AbortController();
+  controller.abort(new DOMException("Cancelled", "AbortError"));
+  assert.throws(
+    () => tool.execute(approved.submitInput, { signal: controller.signal }),
+    (error) => error.name === "AbortError",
+  );
+  assert.equal(approved.toolAdapter.getSnapshot().appealSubmission, null);
+
+  const output = tool.execute(approved.submitInput, { signal: new AbortController().signal });
+  assert.equal(output.action, "submitted");
+  assert.equal(output.submission.status, "submitted_simulation");
+  assert.equal(output.submission.destination.real_insurer_contacted, false);
+  assert.equal("statement" in output, false);
+  assert.equal("package_snapshot" in output.submission, false);
+  registration.unregister();
+  delete globalThis.document;
+});
+
+test("the no-WebMCP fallback preserves human review, approval, and simulated ACT", async () => {
   delete globalThis.document;
   const statuses = [];
   const { toolAdapter, uiActions } = createTestWorkspace();
@@ -496,16 +759,21 @@ test("the no-WebMCP fallback preserves all human review and approval actions", a
   uiActions.prepareAppeal();
   const preview = caseTools.buildAppealPackagePreview(toolAdapter.getSnapshot());
   uiActions.approveAppealPackage(preview.package_version, true);
+  const submitted = uiActions.submitAppeal();
   assert.equal(toolAdapter.getSnapshot().appealApproval.status, "approved");
   assert.equal(toolAdapter.getSnapshot().appealDraft.submission_status, "not_submitted");
+  assert.equal(submitted.action, "submitted");
+  assert.equal(submitted.submission.submitted_by.provided_via, "ASSERA_UI");
+  assert.equal(submitted.submission.destination.real_insurer_contacted, false);
   assert.doesNotThrow(() => registration.unregister());
 });
 
-test("all three eval specifications parse and Milestone 04 keeps approval human-only", async () => {
-  const [readEval, prepareEval, reviewEval] = await Promise.all([
+test("all four eval specifications parse and ACT remains simulated", async () => {
+  const [readEval, prepareEval, reviewEval, actEval] = await Promise.all([
     readFile(new URL("../evals/read-layer.json", import.meta.url), "utf8").then(JSON.parse),
     readFile(new URL("../evals/prepare-layer.json", import.meta.url), "utf8").then(JSON.parse),
     readFile(new URL("../evals/review-layer.json", import.meta.url), "utf8").then(JSON.parse),
+    readFile(new URL("../evals/act-layer.json", import.meta.url), "utf8").then(JSON.parse),
   ]);
   assert.equal(readEval.milestone, "02-read-layer");
   assert.equal(prepareEval.milestone, "03-prepare-layer");
@@ -518,13 +786,19 @@ test("all three eval specifications parse and Milestone 04 keeps approval human-
   assert.equal(reviewEval.scenarios[7].expected.human_ui_required, true);
   assert.equal(reviewEval.scenarios[8].expected.act_tool, false);
   assert.equal(reviewEval.scenarios.every(({ external_submission }) => external_submission === false), true);
+  assert.equal(actEval.milestone, "05-simulated-act-layer");
+  assert.equal(actEval.scenarios.length, 14);
+  assert.equal(actEval.scenarios[7].expected_action, "submitted");
+  assert.equal(actEval.scenarios[9].expected_action, "reused");
+  assert.equal(actEval.scenarios.every(({ external_network_request }) => external_network_request === false), true);
 });
 
-test("source integration contains accessible review controls and no approval or ACT tool", async () => {
-  const [dashboard, workspace, review, registrar] = await Promise.all([
+test("source integration contains accessible review, human fallback, receipt, and exactly one ACT tool", async () => {
+  const [dashboard, workspace, review, receipt, registrar] = await Promise.all([
     readFile(new URL("../components/case/case-dashboard.tsx", import.meta.url), "utf8"),
     readFile(new URL("../components/case/appeal-workspace.tsx", import.meta.url), "utf8"),
     readFile(new URL("../components/case/appeal-package-review.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../components/case/submission-receipt.tsx", import.meta.url), "utf8"),
     readFile(new URL("../webmcp/register-case-tools.ts", import.meta.url), "utf8"),
   ]);
   assert.match(dashboard, /registerCaseTools\(\{\s*adapter: toolAdapter,/s);
@@ -533,8 +807,9 @@ test("source integration contains accessible review controls and no approval or 
   assert.match(review, /I have reviewed the appeal statement, documents, and/);
   assert.match(review, /Approve this package/);
   assert.match(review, /Revoke approval/);
-  assert.match(review, /Nothing has been submitted/);
-  assert.doesNotMatch(registrar, /approve_appeal|approve_package|revoke_approval|submit_appeal|send_appeal|get_appeal_status/);
-  assert.doesNotMatch(`${dashboard}${workspace}${review}${registrar}`, /requestUserInteraction|fetch\(/);
-  assert.doesNotMatch(review, />\s*(Submit|Send|File appeal)\s*</i);
+  assert.match(review, /Run simulated submission/);
+  assert.match(receipt, /No real insurer was/);
+  assert.equal((registrar.match(/name: SUBMIT_APPEAL_TOOL_NAME/g) ?? []).length, 1);
+  assert.doesNotMatch(registrar, /approve_appeal|approve_package|revoke_approval|send_appeal|get_appeal_status|cancel_submission|resubmit_appeal/);
+  assert.doesNotMatch(`${dashboard}${workspace}${review}${receipt}${registrar}`, /requestUserInteraction|fetch\(/);
 });

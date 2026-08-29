@@ -3,6 +3,7 @@ import { buildAppealPackagePreview } from "../../domain/appeal-package";
 import type {
   AppealApproval,
   AppealDraft,
+  SubmitAppealResult,
   CaseWorkspaceSnapshot,
   ConfirmTreatmentDatesInput,
   ConfirmTreatmentDatesResult,
@@ -153,6 +154,7 @@ interface CaseMainProps {
     confirmation: boolean,
   ) => AppealApproval;
   readonly onRevokeApproval: () => boolean;
+  readonly onSubmitSimulation: () => SubmitAppealResult;
 }
 
 export function CaseMain({
@@ -164,6 +166,7 @@ export function CaseMain({
   onSaveDraft,
   onApprovePackage,
   onRevokeApproval,
+  onSubmitSimulation,
 }: CaseMainProps) {
   const physicalTherapyEvidence = snapshot.effectiveEvidence.find(
     (document) => document.id === "evidence-physical-therapy",
@@ -189,6 +192,7 @@ export function CaseMain({
       <TreatmentDatePanel
         confirmation={snapshot.treatmentDateConfirmation}
         open={dateFormOpen}
+        locked={snapshot.appealSubmission !== null}
         onOpen={onReviewDates}
         onCancel={onCancelDates}
         onConfirm={onConfirmDates}
@@ -202,6 +206,8 @@ export function CaseMain({
         onSaveStatement={onSaveDraft}
         onApprovePackage={onApprovePackage}
         onRevokeApproval={onRevokeApproval}
+        submission={snapshot.appealSubmission}
+        onSubmitSimulation={onSubmitSimulation}
       />
       <p className="case-disclaimer">
         ASSERA is a demonstration of healthcare access navigation. It does not provide medical or legal advice.

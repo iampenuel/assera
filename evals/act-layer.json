@@ -1,0 +1,107 @@
+{
+  "milestone": "05-simulated-act-layer",
+  "case_id": "NS-PA-48291",
+  "synthetic": true,
+  "scenarios": [
+    {
+      "id": "blocked-before-draft",
+      "state": "no_draft",
+      "expected_error": "SUBMISSION_NOT_READY",
+      "activity": "ACT_blocked",
+      "external_network_request": false
+    },
+    {
+      "id": "blocked-before-approval",
+      "state": "package_ready_not_approved",
+      "expected_error": "SUBMISSION_NOT_APPROVED",
+      "activity": "ACT_blocked",
+      "external_network_request": false
+    },
+    {
+      "id": "package-id-mismatch",
+      "state": "approved",
+      "expected_error": "PACKAGE_ID_MISMATCH",
+      "external_network_request": false
+    },
+    {
+      "id": "package-version-mismatch",
+      "state": "approved",
+      "expected_error": "PACKAGE_VERSION_MISMATCH",
+      "external_network_request": false
+    },
+    {
+      "id": "approval-id-mismatch",
+      "state": "approved",
+      "expected_error": "APPROVAL_ID_MISMATCH",
+      "external_network_request": false
+    },
+    {
+      "id": "stale-approval",
+      "state": "approval_not_bound_to_current_draft",
+      "expected_error": "APPROVAL_STALE",
+      "external_network_request": false
+    },
+    {
+      "id": "simulation-mode-required",
+      "state": "approved",
+      "expected_error": "SIMULATION_MODE_REQUIRED",
+      "external_network_request": false
+    },
+    {
+      "id": "successful-agent-simulation",
+      "state": "approved",
+      "expected_action": "submitted",
+      "actor": "AGENT",
+      "activity": "ACT_completed",
+      "real_insurer_contacted": false,
+      "external_network_request": false
+    },
+    {
+      "id": "successful-human-fallback",
+      "state": "approved_webmcp_unavailable",
+      "expected_action": "submitted",
+      "actor": "HUMAN",
+      "provided_via": "ASSERA_UI",
+      "real_insurer_contacted": false,
+      "external_network_request": false
+    },
+    {
+      "id": "idempotent-repeat",
+      "state": "submitted_simulation",
+      "expected_action": "reused",
+      "same_receipt": true,
+      "external_network_request": false
+    },
+    {
+      "id": "concurrent-repeat",
+      "state": "approved",
+      "calls": 2,
+      "stored_submissions": 1,
+      "stored_receipts": 1,
+      "external_network_request": false
+    },
+    {
+      "id": "aborted-before-commit",
+      "state": "approved",
+      "expected_error": "AbortError",
+      "state_delta": "none",
+      "activity_delta": "none",
+      "external_network_request": false
+    },
+    {
+      "id": "finalized-package-immutable",
+      "state": "submitted_simulation",
+      "blocked_operations": ["dates", "edit", "prepare", "approve", "revoke"],
+      "expected_error": "SUBMISSION_FINALIZED",
+      "external_network_request": false
+    },
+    {
+      "id": "preview-after-submission",
+      "state": "submitted_simulation",
+      "expected_tool": "preview_appeal",
+      "submission_status": "submitted_simulation",
+      "uses_stored_package_snapshot": true,
+      "external_network_request": false
+    }
+  ]
+}

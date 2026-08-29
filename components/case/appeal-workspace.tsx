@@ -8,10 +8,13 @@ import type {
   AppealDraft,
   AppealPackagePreview,
   AppealReadiness,
+  AppealSubmission,
   EvidenceDocument,
   TreatmentDateConfirmation,
+  SubmitAppealResult,
 } from "../../types/case";
 import { AppealPackageReview } from "./appeal-package-review";
+import { SubmissionReceipt } from "./submission-receipt";
 
 interface AppealWorkspaceProps {
   readonly draft: AppealDraft | null;
@@ -25,6 +28,8 @@ interface AppealWorkspaceProps {
     confirmation: boolean,
   ) => AppealApproval;
   readonly onRevokeApproval: () => boolean;
+  readonly submission: AppealSubmission | null;
+  readonly onSubmitSimulation: () => SubmitAppealResult;
 }
 
 export function AppealWorkspace({
@@ -36,6 +41,8 @@ export function AppealWorkspace({
   onSaveStatement,
   onApprovePackage,
   onRevokeApproval,
+  submission,
+  onSubmitSimulation,
 }: AppealWorkspaceProps) {
   if (!draft) {
     return (
@@ -72,6 +79,8 @@ export function AppealWorkspace({
       onSaveStatement={onSaveStatement}
       onApprovePackage={onApprovePackage}
       onRevokeApproval={onRevokeApproval}
+      submission={submission}
+      onSubmitSimulation={onSubmitSimulation}
     />
   );
 }
@@ -83,9 +92,11 @@ function PreparedAppealWorkspace({
   onSaveStatement,
   onApprovePackage,
   onRevokeApproval,
+  submission,
+  onSubmitSimulation,
 }: Pick<
   AppealWorkspaceProps,
-  "evidence" | "preview" | "onSaveStatement" | "onApprovePackage" | "onRevokeApproval"
+  "evidence" | "preview" | "onSaveStatement" | "onApprovePackage" | "onRevokeApproval" | "submission" | "onSubmitSimulation"
 > & {
   readonly draft: AppealDraft;
 }) {
@@ -132,10 +143,16 @@ function PreparedAppealWorkspace({
     >
       <div className="appeal-workspace-heading">
         <div>
-          <p className="draft-eyebrow">DRAFT — NOT SUBMITTED</p>
-          <h2 id="appeal-workspace-title">Appeal draft</h2>
+          <p className="draft-eyebrow">
+            {submission ? "SIMULATED SUBMISSION RECORDED" : "DRAFT — NOT SUBMITTED"}
+          </p>
+          <h2 id="appeal-workspace-title">
+            {submission ? "Submitted package source" : "Appeal draft"}
+          </h2>
         </div>
-        <span className="draft-safety-label">LOCAL WORKSPACE</span>
+        <span className="draft-safety-label">
+          {submission ? "FINALIZED" : "LOCAL WORKSPACE"}
+        </span>
       </div>
 
       <dl className="draft-metadata">
@@ -166,9 +183,11 @@ function PreparedAppealWorkspace({
       <textarea
         id="appeal-draft-statement"
         value={statement}
+        readOnly={submission !== null}
         maxLength={5_000}
         aria-describedby="draft-edit-status draft-safety-copy"
         onChange={(event) => {
+          if (submission) return;
           setStatement(event.target.value);
           setMessage(null);
           setError(null);
@@ -182,14 +201,23 @@ function PreparedAppealWorkspace({
         >
           {error ?? message ?? `${statement.length.toLocaleString("en-US")} / 5,000 characters`}
         </p>
-        <button type="button" onClick={handleSave}>Save changes</button>
+        {submission ? (
+          <span className="finalized-field-label">READ-ONLY AFTER SIMULATION</span>
+        ) : (
+          <button type="button" onClick={handleSave}>Save changes</button>
+        )}
       </div>
 
       <div id="draft-safety-copy" className="appeal-workspace-safety">
-        <strong>Nothing has been sent to Northstar Health.</strong>
+        <strong>
+          {submission
+            ? "The package is locked to the immutable simulated receipt."
+            : "Nothing has been sent to Northstar Health."}
+        </strong>
         <span>
-          Synthetic demonstration case. This draft does not provide medical or
-          legal advice.
+          {submission
+            ? "No real insurer was contacted and no external network request occurred."
+            : "Synthetic demonstration case. This draft does not provide medical or legal advice."}
         </span>
       </div>
     </section>
@@ -199,8 +227,10 @@ function PreparedAppealWorkspace({
         preview={preview}
         onApprove={onApprovePackage}
         onRevoke={onRevokeApproval}
+        onSubmit={onSubmitSimulation}
       />
     ) : null}
+    {submission ? <SubmissionReceipt submission={submission} /> : null}
     </>
   );
 }

@@ -87,6 +87,23 @@ export function CaseDashboard({ caseId }: { readonly caseId: string }) {
     focusWorkspaceElement("appeal-package-review", "#appeal-package-review-title");
   };
 
+  const submitSimulation = () => {
+    const result = uiActions.submitAppeal();
+    setDateFormOpen(false);
+    focusWorkspaceElement(
+      "simulated-submission-receipt",
+      "#submission-receipt-title",
+    );
+    return result;
+  };
+
+  const reviewReceipt = () => {
+    focusWorkspaceElement(
+      "simulated-submission-receipt",
+      "#submission-receipt-title",
+    );
+  };
+
   return (
     <main className="case-shell">
       <Sidebar
@@ -94,6 +111,7 @@ export function CaseDashboard({ caseId }: { readonly caseId: string }) {
         evidenceCount={snapshot.effectiveEvidence.length}
         readiness={snapshot.readiness}
         hasDraft={snapshot.appealDraft !== null}
+        hasSubmission={snapshot.appealSubmission !== null}
       />
       <header className="case-topbar">
         <AsseraLogo className="case-mobile-logo" />
@@ -105,6 +123,7 @@ export function CaseDashboard({ caseId }: { readonly caseId: string }) {
             evidenceCount={snapshot.effectiveEvidence.length}
             readiness={snapshot.readiness}
             hasDraft={snapshot.appealDraft !== null}
+            hasSubmission={snapshot.appealSubmission !== null}
           />
         </details>
         <div className="workspace-context">
@@ -128,6 +147,7 @@ export function CaseDashboard({ caseId }: { readonly caseId: string }) {
         }
         onApprovePackage={uiActions.approveAppealPackage}
         onRevokeApproval={uiActions.revokeAppealApproval}
+        onSubmitSimulation={submitSimulation}
       />
       <RightRail
         snapshot={snapshot}
@@ -136,6 +156,8 @@ export function CaseDashboard({ caseId }: { readonly caseId: string }) {
         onPrepare={prepareAppeal}
         onReviewPackage={reviewPackage}
         onRevokeApproval={uiActions.revokeAppealApproval}
+        onRunSimulation={submitSimulation}
+        onReviewReceipt={reviewReceipt}
       />
     </main>
   );

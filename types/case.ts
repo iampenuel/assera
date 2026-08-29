@@ -159,7 +159,7 @@ export interface PatientCase extends DenialDetails {
   readonly days_remaining: number;
 }
 
-export type WorkspaceActivityCategory = "READ" | "PREPARE" | "CONTROL";
+export type WorkspaceActivityCategory = "READ" | "PREPARE" | "CONTROL" | "ACT";
 export type WorkspaceActor = "AGENT" | "HUMAN";
 export type WorkspaceActivityOutcome = "completed" | "blocked";
 
@@ -190,15 +190,21 @@ export interface ControlWorkspaceActivity extends WorkspaceActivityBase {
   readonly outcome: "completed";
 }
 
+export interface ActWorkspaceActivity extends WorkspaceActivityBase {
+  readonly category: "ACT";
+}
+
 export type WorkspaceActivity =
   | ReadWorkspaceActivity
   | PrepareWorkspaceActivity
-  | ControlWorkspaceActivity;
+  | ControlWorkspaceActivity
+  | ActWorkspaceActivity;
 
 export type WorkspaceActivityInput =
   | Omit<ReadWorkspaceActivity, "id" | "occurredAt">
   | Omit<PrepareWorkspaceActivity, "id" | "occurredAt">
-  | Omit<ControlWorkspaceActivity, "id" | "occurredAt">;
+  | Omit<ControlWorkspaceActivity, "id" | "occurredAt">
+  | Omit<ActWorkspaceActivity, "id" | "occurredAt">;
 
 export interface AppealDraft {
   readonly id: string;
@@ -247,6 +253,7 @@ export interface AppealPackageSharedInformation {
 }
 
 export interface AppealApproval {
+  readonly id: string;
   readonly case_id: string;
   readonly package_id: string;
   readonly package_version: string;
@@ -263,7 +270,7 @@ export interface AppealApproval {
   readonly synthetic: true;
 }
 
-export interface AppealPackagePreview {
+export interface AppealPackageSnapshot {
   readonly package_id: string;
   readonly package_version: string;
   readonly case_id: string;
@@ -291,11 +298,60 @@ export interface AppealPackagePreview {
     | { readonly status: "not_approved" }
     | {
         readonly status: "approved";
+        readonly approval_id: string;
         readonly approved_at: string;
         readonly approved_by: string;
         readonly package_version: string;
       };
   readonly submission_status: "not_submitted";
+}
+
+export interface AppealSubmissionReceipt {
+  readonly confirmation_number: string;
+  readonly recorded_at: string;
+  readonly status: "recorded";
+}
+
+export interface AppealSubmission {
+  readonly id: string;
+  readonly case_id: string;
+  readonly status: "submitted_simulation";
+  readonly submitted_at: string;
+  readonly submitted_by: {
+    readonly type: "agent" | "patient";
+    readonly name: "ChatGPT agent" | "Maya Thompson";
+    readonly provided_via: "WEBMCP" | "ASSERA_UI";
+  };
+  readonly destination: {
+    readonly name: "Northstar Health Appeals Department";
+    readonly channel: "simulated_payer_portal";
+    readonly real_insurer_contacted: false;
+  };
+  readonly package_id: string;
+  readonly package_version: string;
+  readonly draft_id: string;
+  readonly draft_version: number;
+  readonly approval_id: string;
+  readonly receipt: AppealSubmissionReceipt;
+  readonly package_snapshot: AppealPackageSnapshot;
+  readonly synthetic: true;
+  readonly external_network_request: false;
+}
+
+export interface AppealPackagePreview
+  extends Omit<AppealPackageSnapshot, "status" | "submission_status"> {
+  readonly status: "review" | "submitted_simulation";
+  readonly submission_status: "not_submitted" | "submitted_simulation";
+  readonly submission?: Pick<
+    AppealSubmission,
+    | "id"
+    | "submitted_at"
+    | "submitted_by"
+    | "destination"
+    | "approval_id"
+    | "receipt"
+    | "external_network_request"
+  >;
 }
 
 export interface AppealPackageToolResult {
@@ -319,11 +375,20 @@ export interface AppealPackageToolResult {
   readonly unresolved_items: readonly NextRequiredInformation[];
   readonly approval_status: "not_approved" | "approved";
   readonly approval?: {
+    readonly approval_id: string;
     readonly approved_at: string;
     readonly approved_by: string;
     readonly package_version: string;
   };
-  readonly submission_status: "not_submitted";
+  readonly submission_status: "not_submitted" | "submitted_simulation";
+  readonly submission?: {
+    readonly submission_id: string;
+    readonly submitted_at: string;
+    readonly approval_id: string;
+    readonly receipt: AppealSubmissionReceipt;
+    readonly real_insurer_contacted: false;
+    readonly external_network_request: false;
+  };
   readonly external_submission: false;
   readonly synthetic: true;
 }
@@ -333,6 +398,7 @@ export interface CaseWorkspaceState {
   readonly treatmentDateConfirmation: TreatmentDateConfirmation | null;
   readonly appealDraft: AppealDraft | null;
   readonly appealApproval: AppealApproval | null;
+  readonly appealSubmission: AppealSubmission | null;
   readonly activities: readonly WorkspaceActivity[];
 }
 
@@ -346,6 +412,7 @@ export interface CaseWorkspaceSnapshot {
   readonly readiness: AppealReadiness;
   readonly appealDraft: AppealDraft | null;
   readonly appealApproval: AppealApproval | null;
+  readonly appealSubmission: AppealSubmission | null;
   readonly activities: readonly WorkspaceActivity[];
 }
 
@@ -362,10 +429,35 @@ export interface PrepareAppealResult {
   readonly draft: AppealDraft;
 }
 
+export interface SubmitAppealInput {
+  readonly case_id: string;
+  readonly package_id: string;
+  readonly package_version: string;
+  readonly approval_id: string;
+  readonly mode: "simulation";
+}
+
+export interface SubmitAppealResult {
+  readonly action: "submitted" | "reused";
+  readonly submission: AppealSubmission;
+}
+
+export interface SubmitAppealToolResult {
+  readonly case_id: string;
+  readonly action: "submitted" | "reused";
+  readonly package_id: string;
+  readonly package_version: string;
+  readonly approval_id: string;
+  readonly submission: Omit<AppealSubmission, "package_snapshot" | "draft_id" | "draft_version" | "package_id" | "package_version" | "approval_id"> & {
+    readonly confirmation_number: string;
+  };
+}
+
 export interface CaseWorkspaceToolAdapter {
   getSnapshot(): CaseWorkspaceSnapshot;
   prepareAppeal(): PrepareAppealResult;
   previewAppeal(): AppealPackagePreview;
+  submitAppeal(input: SubmitAppealInput, signal?: AbortSignal): SubmitAppealResult;
   recordReadActivity(input: Omit<ReadWorkspaceActivity, "id" | "occurredAt">): WorkspaceActivity;
 }
 
@@ -380,6 +472,7 @@ export interface CaseWorkspaceUiActions {
     confirmation: boolean,
   ): AppealApproval;
   revokeAppealApproval(): boolean;
+  submitAppeal(): SubmitAppealResult;
 }
 
 export type WebMCPStatus = "checking" | "available" | "unavailable" | "error";

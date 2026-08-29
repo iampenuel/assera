@@ -1,6 +1,7 @@
 import type {
   CaseWorkspaceSnapshot,
   PrepareAppealResult,
+  SubmitAppealResult,
   WebMCPStatus,
   WorkspaceActivity,
 } from "../../types/case";
@@ -8,7 +9,7 @@ import type {
 const statusCopy: Record<WebMCPStatus, { label: string; className: string; detail?: string }> = {
   checking: { label: "Connecting", className: "checking" },
   available: { label: "Active", className: "active" },
-  unavailable: { label: "Preview mode", className: "preview", detail: "The agent package-preview tool is unavailable in this browser. Human review, confirmation, preparation, approval, and revocation remain available in ASSERA." },
+  unavailable: { label: "Preview mode", className: "preview", detail: "WebMCP is unavailable in this browser. Human review, preparation, approval, and simulated submission remain available in ASSERA." },
   error: { label: "Unavailable", className: "unavailable", detail: "The WebMCP tools could not connect. No case information was affected." },
 };
 
@@ -25,23 +26,40 @@ function NextSafeStep({
   onPrepare,
   onReviewPackage,
   onRevokeApproval,
+  onRunSimulation,
+  onReviewReceipt,
 }: {
   readonly snapshot: CaseWorkspaceSnapshot;
   readonly onReviewDates: () => void;
   readonly onPrepare: () => PrepareAppealResult;
   readonly onReviewPackage: () => void;
   readonly onRevokeApproval: () => boolean;
+  readonly onRunSimulation: () => SubmitAppealResult;
+  readonly onReviewReceipt: () => void;
 }) {
+  if (snapshot.appealSubmission) {
+    return (
+      <section id="next-safe-step" className="rail-card next-step-card submitted-next-step" aria-labelledby="next-step-title">
+        <p className="case-section-label">SIMULATION COMPLETE</p>
+        <h2 id="next-step-title">Receipt recorded</h2>
+        <p>The exact approved package is finalized with one immutable simulated receipt.</p>
+        <button type="button" onClick={onReviewReceipt}>Review receipt <span aria-hidden="true">→</span></button>
+        <small>No real insurer was contacted. No further ACT action is available.</small>
+      </section>
+    );
+  }
+
   if (snapshot.appealDraft) {
     if (snapshot.appealApproval) {
       return (
         <section id="next-safe-step" className="rail-card next-step-card approved-next-step" aria-labelledby="next-step-title">
-          <p className="case-section-label">APPROVAL RECORDED</p>
+          <p className="case-section-label">READY FOR SIMULATION</p>
           <h2 id="next-step-title">Package approved</h2>
-          <p>Maya approved this exact package version for a future simulated submission.</p>
-          <button type="button" onClick={onReviewPackage}>Review approved package <span aria-hidden="true">→</span></button>
+          <p>Maya approved this exact package version. Your agent or you can now record a local simulation.</p>
+          <button type="button" onClick={onRunSimulation}>Run simulated submission <span aria-hidden="true">→</span></button>
+          <button className="rail-secondary-action" type="button" onClick={onReviewPackage}>Review approved package</button>
           <button className="rail-secondary-action" type="button" onClick={() => onRevokeApproval()}>Revoke approval</button>
-          <small>Nothing has been sent to Northstar Health. No submission tool is available yet.</small>
+          <small>Simulation only. No real insurer will be contacted.</small>
         </section>
       );
     }
@@ -87,7 +105,13 @@ function AgentPermissions({
   readonly snapshot: CaseWorkspaceSnapshot;
 }) {
   const readStatus = statusCopy[status];
-  const prepareState = snapshot.appealDraft
+  const prepareState = snapshot.appealSubmission
+    ? {
+        label: "Finalized",
+        className: "prepared",
+        detail: "The submitted package snapshot is locked; no further preparation or edits are available.",
+      }
+    : snapshot.appealDraft
     ? {
         label: "Draft prepared",
         className: "prepared",
@@ -104,6 +128,29 @@ function AgentPermissions({
           className: "blocked",
           detail: "Confirm treatment dates before an appeal draft can be prepared.",
         };
+  const actState = snapshot.appealSubmission
+    ? {
+        label: "Completed",
+        className: "prepared",
+        detail: "One immutable simulated receipt is recorded. No further ACT action is available.",
+      }
+    : snapshot.appealApproval
+      ? status === "available"
+        ? {
+            label: "Available",
+            className: "active",
+            detail: "Your agent can record the approved package in simulation mode. No real insurer will be contacted.",
+          }
+        : {
+            label: "Agent unavailable",
+            className: "blocked",
+            detail: "WebMCP ACT is unavailable, but Maya can run the same local simulation in ASSERA.",
+          }
+      : {
+          label: "Blocked",
+          className: "blocked",
+          detail: "Maya must approve the exact current package before simulated ACT is available.",
+        };
 
   return (
     <section className="rail-card permissions-card" aria-labelledby="permissions-title">
@@ -118,12 +165,12 @@ function AgentPermissions({
           <span className={`permission-status ${prepareState.className}`}>{prepareState.label}</span>
         </div>
         <div>
-          <dt>CONTROL</dt><dd>Only Maya can approve or revoke the exact package version in the ASSERA interface.</dd>
-          <span className="permission-status neutral">Human only</span>
+          <dt>CONTROL</dt><dd>{snapshot.appealSubmission ? "Maya's approval is retained as an immutable audit record after simulation." : "Only Maya can approve or revoke the exact package version in the ASSERA interface."}</dd>
+          <span className="permission-status neutral">{snapshot.appealSubmission ? "Completed" : "Human only"}</span>
         </div>
         <div>
-          <dt>ACT</dt><dd>No submission tool exists. Nothing can be sent in this milestone.</dd>
-          <span className="permission-status neutral">Not available</span>
+          <dt>ACT</dt><dd>{actState.detail}</dd>
+          <span className={`permission-status ${actState.className}`}>{actState.label}</span>
         </div>
       </dl>
       {readStatus.detail ? <p className="permission-detail">{readStatus.detail}</p> : null}
@@ -166,6 +213,8 @@ export function RightRail({
   onPrepare,
   onReviewPackage,
   onRevokeApproval,
+  onRunSimulation,
+  onReviewReceipt,
 }: {
   readonly snapshot: CaseWorkspaceSnapshot;
   readonly status: WebMCPStatus;
@@ -173,6 +222,8 @@ export function RightRail({
   readonly onPrepare: () => PrepareAppealResult;
   readonly onReviewPackage: () => void;
   readonly onRevokeApproval: () => boolean;
+  readonly onRunSimulation: () => SubmitAppealResult;
+  readonly onReviewReceipt: () => void;
 }) {
   return (
     <aside className="case-right-rail" aria-label="Case actions and agent access">
@@ -182,12 +233,14 @@ export function RightRail({
         onPrepare={onPrepare}
         onReviewPackage={onReviewPackage}
         onRevokeApproval={onRevokeApproval}
+        onRunSimulation={onRunSimulation}
+        onReviewReceipt={onReviewReceipt}
       />
       <AgentPermissions status={status} snapshot={snapshot} />
       <ActivityPanel activities={snapshot.activities} />
       <div className="control-reassurance">
         <span aria-hidden="true">⌑</span>
-        <p><strong>You approve consequential actions.</strong><br />Nothing is sent without your approval.</p>
+        <p><strong>You approve consequential actions.</strong><br />{snapshot.appealSubmission ? "The simulated receipt is final and no real insurer was contacted." : "Nothing is sent without your approval."}</p>
       </div>
     </aside>
   );

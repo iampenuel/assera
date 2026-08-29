@@ -15,6 +15,12 @@ import {
 } from "./appeal-draft";
 import { evaluateAppealReadiness } from "./readiness";
 import {
+  assertSubmissionMutable,
+  createSimulatedSubmission,
+  SubmissionError,
+  validateSimulatedSubmission,
+} from "./simulated-payer";
+import {
   createTreatmentDateConfirmation,
   deriveEffectiveEvidence,
   validateTreatmentDates,
@@ -23,6 +29,7 @@ import type {
   AppealApproval,
   AppealDraft,
   AppealPackagePreview,
+  AppealSubmission,
   CaseWorkspaceSnapshot,
   CaseWorkspaceState,
   CaseWorkspaceToolAdapter,
@@ -30,6 +37,8 @@ import type {
   ConfirmTreatmentDatesResult,
   PrepareAppealResult,
   ReadWorkspaceActivity,
+  SubmitAppealInput,
+  SubmitAppealResult,
   TreatmentDateConfirmation,
   WorkspaceActivity,
   WorkspaceActivityInput,
@@ -68,6 +77,11 @@ export type CaseWorkspaceAction =
   | {
       readonly type: "appeal_approval_revoked";
       readonly activity: WorkspaceActivity;
+    }
+  | {
+      readonly type: "appeal_submission_recorded";
+      readonly appealSubmission: AppealSubmission;
+      readonly activity: WorkspaceActivity;
     };
 
 export function createInitialCaseWorkspaceState(caseId: string): CaseWorkspaceState {
@@ -80,6 +94,7 @@ export function createInitialCaseWorkspaceState(caseId: string): CaseWorkspaceSt
     treatmentDateConfirmation: null,
     appealDraft: null,
     appealApproval: null,
+    appealSubmission: null,
     activities: [],
   };
 }
@@ -122,6 +137,12 @@ export function caseWorkspaceReducer(
         appealApproval: null,
         activities: [...state.activities, action.activity],
       };
+    case "appeal_submission_recorded":
+      return {
+        ...state,
+        appealSubmission: action.appealSubmission,
+        activities: [...state.activities, action.activity],
+      };
     default:
       return state;
   }
@@ -155,6 +176,7 @@ export function selectCaseWorkspaceSnapshot(
     readiness,
     appealDraft: state.appealDraft,
     appealApproval: state.appealApproval,
+    appealSubmission: state.appealSubmission,
     activities: state.activities,
   };
 }
@@ -171,6 +193,7 @@ interface CreateCaseWorkspaceAdaptersOptions {
   readonly getState: () => CaseWorkspaceState;
   readonly applyAction: ApplyWorkspaceAction;
   readonly now?: () => string;
+  readonly createId?: (kind: "approval" | "submission") => string;
 }
 
 function confirmationsMatch(
@@ -186,6 +209,7 @@ export function createCaseWorkspaceAdapters({
   getState,
   applyAction,
   now = () => new Date().toISOString(),
+  createId = (kind) => `${kind}-${crypto.randomUUID()}`,
 }: CreateCaseWorkspaceAdaptersOptions): {
   readonly toolAdapter: CaseWorkspaceToolAdapter;
   readonly uiActions: CaseWorkspaceUiActions;
@@ -212,6 +236,7 @@ export function createCaseWorkspaceAdapters({
     input: Parameters<CaseWorkspaceUiActions["confirmTreatmentDates"]>[0],
   ): ConfirmTreatmentDatesResult => {
     const snapshot = getSnapshot();
+    assertSubmissionMutable(snapshot);
     const physicalTherapy = snapshot.baseEvidence.find(
       (document) => document.id === "evidence-physical-therapy",
     );
@@ -268,6 +293,7 @@ export function createCaseWorkspaceAdapters({
 
   const prepareAppeal = (actor: WorkspaceActor): PrepareAppealResult => {
     const snapshot = getSnapshot();
+    assertSubmissionMutable(snapshot);
 
     try {
       if (
@@ -339,6 +365,7 @@ export function createCaseWorkspaceAdapters({
 
   const updateDraftStatement = (statement: string): AppealDraft => {
     const snapshot = getSnapshot();
+    assertSubmissionMutable(snapshot);
     if (!snapshot.appealDraft) {
       throw new DraftStatementError(
         "DRAFT_NOT_FOUND",
@@ -385,6 +412,7 @@ export function createCaseWorkspaceAdapters({
     confirmation: boolean,
   ): AppealApproval => {
     const snapshot = getSnapshot();
+    assertSubmissionMutable(snapshot);
     if (
       snapshot.appealApproval?.package_version === packageVersion &&
       snapshot.appealDraft?.version === snapshot.appealApproval.draft_version
@@ -399,6 +427,7 @@ export function createCaseWorkspaceAdapters({
       confirmation,
       "HUMAN",
       occurredAt,
+      createId("approval"),
     );
     const activity = materializeActivity(
       {
@@ -415,7 +444,9 @@ export function createCaseWorkspaceAdapters({
   };
 
   const revokeAppealApproval = (): boolean => {
-    if (!getSnapshot().appealApproval) return false;
+    const snapshot = getSnapshot();
+    assertSubmissionMutable(snapshot);
+    if (!snapshot.appealApproval) return false;
 
     const occurredAt = now();
     const activity = materializeActivity(
@@ -430,6 +461,73 @@ export function createCaseWorkspaceAdapters({
     );
     applyAction({ type: "appeal_approval_revoked", activity });
     return true;
+  };
+
+  const throwIfAborted = (signal?: AbortSignal) => {
+    if (!signal?.aborted) return;
+    throw signal.reason instanceof Error
+      ? signal.reason
+      : new DOMException("The operation was aborted.", "AbortError");
+  };
+
+  const submitAppeal = (
+    actor: WorkspaceActor,
+    input: SubmitAppealInput,
+    signal?: AbortSignal,
+  ): SubmitAppealResult => {
+    throwIfAborted(signal);
+    try {
+      const validated = validateSimulatedSubmission(getSnapshot(), input);
+      if (validated.existing) {
+        recordActivity({
+          title: "Existing simulated receipt returned",
+          category: "ACT",
+          actor,
+          outcome: "completed",
+          impact: "Existing receipt reused; no duplicate submission and no real insurer contacted",
+          ...(actor === "AGENT" ? { toolName: "submit_appeal" } : {}),
+        });
+        return { action: "reused", submission: validated.existing };
+      }
+
+      const submittedAt = now();
+      const appealSubmission = createSimulatedSubmission(
+        validated,
+        actor,
+        createId("submission"),
+        submittedAt,
+      );
+      const activity = materializeActivity(
+        {
+          title: "Simulated submission recorded",
+          category: "ACT",
+          actor,
+          outcome: "completed",
+          impact: "Immutable simulated receipt recorded in ASSERA; no real insurer contacted",
+          ...(actor === "AGENT" ? { toolName: "submit_appeal" } : {}),
+        },
+        submittedAt,
+      );
+      throwIfAborted(signal);
+      applyAction({
+        type: "appeal_submission_recorded",
+        appealSubmission,
+        activity,
+      });
+      return { action: "submitted", submission: appealSubmission };
+    } catch (error) {
+      if (error instanceof SubmissionError) {
+        recordActivity({
+          title: "Simulated submission blocked",
+          category: "ACT",
+          actor,
+          outcome: "blocked",
+          impact: `${error.message} No receipt recorded; no real insurer contacted.`,
+          ...(actor === "AGENT" ? { toolName: "submit_appeal" } : {}),
+        });
+      }
+      throw error;
+    }
   };
 
   const toolAdapter: CaseWorkspaceToolAdapter = {
@@ -466,6 +564,7 @@ export function createCaseWorkspaceAdapters({
         throw error;
       }
     },
+    submitAppeal: (input, signal) => submitAppeal("AGENT", input, signal),
   };
 
   const uiActions: CaseWorkspaceUiActions = {
@@ -474,6 +573,17 @@ export function createCaseWorkspaceAdapters({
     updateDraftStatement,
     approveAppealPackage: approveCurrentPackage,
     revokeAppealApproval,
+    submitAppeal: () => {
+      const snapshot = getSnapshot();
+      const draft = snapshot.appealDraft;
+      return submitAppeal("HUMAN", {
+        case_id: snapshot.caseId,
+        package_id: draft ? `${draft.id}-package` : "unavailable",
+        package_version: draft ? `${draft.id}:v${draft.version}` : "unavailable",
+        approval_id: snapshot.appealApproval?.id ?? "unavailable",
+        mode: "simulation",
+      });
+    },
   };
 
   return { toolAdapter, uiActions };
