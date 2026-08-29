@@ -26,7 +26,10 @@ export function CaseNavigation({
     },
     { href: "#next-safe-step", label: "Next safe step" },
     ...(hasDraft
-      ? [{ href: "#appeal-workspace", label: "Appeal draft" }]
+      ? [
+          { href: "#appeal-workspace", label: "Appeal draft" },
+          { href: "#appeal-package-review", label: "Review package" },
+        ]
       : []),
   ];
 

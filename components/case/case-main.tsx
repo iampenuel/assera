@@ -1,5 +1,7 @@
 import { formatIsoDate } from "../../domain/format-date";
+import { buildAppealPackagePreview } from "../../domain/appeal-package";
 import type {
+  AppealApproval,
   AppealDraft,
   CaseWorkspaceSnapshot,
   ConfirmTreatmentDatesInput,
@@ -146,6 +148,11 @@ interface CaseMainProps {
     input: ConfirmTreatmentDatesInput,
   ) => ConfirmTreatmentDatesResult;
   readonly onSaveDraft: (statement: string) => AppealDraft;
+  readonly onApprovePackage: (
+    packageVersion: string,
+    confirmation: boolean,
+  ) => AppealApproval;
+  readonly onRevokeApproval: () => boolean;
 }
 
 export function CaseMain({
@@ -155,10 +162,15 @@ export function CaseMain({
   onCancelDates,
   onConfirmDates,
   onSaveDraft,
+  onApprovePackage,
+  onRevokeApproval,
 }: CaseMainProps) {
   const physicalTherapyEvidence = snapshot.effectiveEvidence.find(
     (document) => document.id === "evidence-physical-therapy",
   );
+  const packagePreview = snapshot.appealDraft
+    ? buildAppealPackagePreview(snapshot)
+    : null;
 
   return (
     <div className="case-main-column">
@@ -186,7 +198,10 @@ export function CaseMain({
         evidence={snapshot.effectiveEvidence}
         readiness={snapshot.readiness}
         confirmation={snapshot.treatmentDateConfirmation}
+        preview={packagePreview}
         onSaveStatement={onSaveDraft}
+        onApprovePackage={onApprovePackage}
+        onRevokeApproval={onRevokeApproval}
       />
       <p className="case-disclaimer">
         ASSERA is a demonstration of healthcare access navigation. It does not provide medical or legal advice.

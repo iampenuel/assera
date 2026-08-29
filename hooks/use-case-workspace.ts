@@ -3,7 +3,7 @@
 import { useCallback, useLayoutEffect, useMemo, useReducer, useRef } from "react";
 import {
   caseWorkspaceReducer,
-  createCaseWorkspaceAdapter,
+  createCaseWorkspaceAdapters,
   createInitialCaseWorkspaceState,
   selectCaseWorkspaceSnapshot,
   type CaseWorkspaceAction,
@@ -30,11 +30,11 @@ export function useCaseWorkspace(caseId: string) {
 
   const getState = useCallback(() => stateRef.current, []);
 
-  const adapter = useMemo(() => {
+  const adapters = useMemo(() => {
     // The factory stores these callbacks without invoking them during render;
     // reads happen only when a human event or WebMCP tool calls the adapter.
     // eslint-disable-next-line react-hooks/refs
-    return createCaseWorkspaceAdapter({
+    return createCaseWorkspaceAdapters({
         getState,
         applyAction,
     });
@@ -42,5 +42,5 @@ export function useCaseWorkspace(caseId: string) {
 
   const snapshot = useMemo(() => selectCaseWorkspaceSnapshot(state), [state]);
 
-  return { adapter, snapshot };
+  return { ...adapters, snapshot };
 }

@@ -78,7 +78,7 @@ test("server-renders Maya's complete denial dashboard on the case route", async 
   assert.match(html, /Treatment dates need confirmation/);
   assert.match(html, /fictional Northstar Health policy/);
   assert.match(html, /Confirm treatment dates before an appeal draft can be prepared/);
-  assert.match(html, /No submission tool exists in this milestone/);
+  assert.match(html, /No submission tool exists\. Nothing can be sent in this milestone/);
   assert.match(html, /No workspace activity yet/);
   assert.match(html, /Review &amp; confirm dates/);
   assert.match(html, /Treatment dates need confirmation/);

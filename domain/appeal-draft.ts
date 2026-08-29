@@ -99,6 +99,7 @@ export function createAppealDraft(
 
   return {
     id: `appeal-draft-${snapshot.caseId}-${dateKey}`,
+    version: 1,
     case_id: snapshot.caseId,
     status: "draft",
     created_at: createdAt,

@@ -2,6 +2,12 @@ import { getCaseFixture } from "../data/case-fixture";
 import { mayaEvidence } from "../data/evidence-fixture";
 import { mayaCoveragePolicy } from "../data/policy-fixture";
 import {
+  approveAppealPackage,
+  AppealApprovalError,
+  AppealPackageError,
+  buildAppealPackagePreview,
+} from "./appeal-package";
+import {
   createAppealDraft,
   DraftStatementError,
   PrepareBlockedError,
@@ -14,12 +20,16 @@ import {
   validateTreatmentDates,
 } from "./treatment-dates";
 import type {
+  AppealApproval,
   AppealDraft,
-  CaseWorkspaceAdapter,
+  AppealPackagePreview,
   CaseWorkspaceSnapshot,
   CaseWorkspaceState,
+  CaseWorkspaceToolAdapter,
+  CaseWorkspaceUiActions,
   ConfirmTreatmentDatesResult,
   PrepareAppealResult,
+  ReadWorkspaceActivity,
   TreatmentDateConfirmation,
   WorkspaceActivity,
   WorkspaceActivityInput,
@@ -35,16 +45,28 @@ export type CaseWorkspaceAction =
       readonly type: "treatment_dates_confirmed";
       readonly confirmation: TreatmentDateConfirmation;
       readonly appealDraft: AppealDraft | null;
+      readonly appealApproval: AppealApproval | null;
       readonly activity: WorkspaceActivity;
     }
   | {
       readonly type: "appeal_draft_prepared";
       readonly appealDraft: AppealDraft;
+      readonly appealApproval: AppealApproval | null;
       readonly activity: WorkspaceActivity;
     }
   | {
       readonly type: "appeal_draft_updated";
       readonly appealDraft: AppealDraft;
+      readonly appealApproval: AppealApproval | null;
+      readonly activity: WorkspaceActivity;
+    }
+  | {
+      readonly type: "appeal_package_approved";
+      readonly appealApproval: AppealApproval;
+      readonly activity: WorkspaceActivity;
+    }
+  | {
+      readonly type: "appeal_approval_revoked";
       readonly activity: WorkspaceActivity;
     };
 
@@ -57,6 +79,7 @@ export function createInitialCaseWorkspaceState(caseId: string): CaseWorkspaceSt
     caseId,
     treatmentDateConfirmation: null,
     appealDraft: null,
+    appealApproval: null,
     activities: [],
   };
 }
@@ -76,6 +99,7 @@ export function caseWorkspaceReducer(
         ...state,
         treatmentDateConfirmation: action.confirmation,
         appealDraft: action.appealDraft,
+        appealApproval: action.appealApproval,
         activities: [...state.activities, action.activity],
       };
     case "appeal_draft_prepared":
@@ -83,6 +107,19 @@ export function caseWorkspaceReducer(
       return {
         ...state,
         appealDraft: action.appealDraft,
+        appealApproval: action.appealApproval,
+        activities: [...state.activities, action.activity],
+      };
+    case "appeal_package_approved":
+      return {
+        ...state,
+        appealApproval: action.appealApproval,
+        activities: [...state.activities, action.activity],
+      };
+    case "appeal_approval_revoked":
+      return {
+        ...state,
+        appealApproval: null,
         activities: [...state.activities, action.activity],
       };
     default:
@@ -117,6 +154,7 @@ export function selectCaseWorkspaceSnapshot(
     treatmentDateConfirmation: state.treatmentDateConfirmation,
     readiness,
     appealDraft: state.appealDraft,
+    appealApproval: state.appealApproval,
     activities: state.activities,
   };
 }
@@ -129,7 +167,7 @@ export function getInitialCaseWorkspaceSnapshot(
 
 type ApplyWorkspaceAction = (action: CaseWorkspaceAction) => CaseWorkspaceState;
 
-interface CreateCaseWorkspaceAdapterOptions {
+interface CreateCaseWorkspaceAdaptersOptions {
   readonly getState: () => CaseWorkspaceState;
   readonly applyAction: ApplyWorkspaceAction;
   readonly now?: () => string;
@@ -144,11 +182,14 @@ function confirmationsMatch(
   );
 }
 
-export function createCaseWorkspaceAdapter({
+export function createCaseWorkspaceAdapters({
   getState,
   applyAction,
   now = () => new Date().toISOString(),
-}: CreateCaseWorkspaceAdapterOptions): CaseWorkspaceAdapter {
+}: CreateCaseWorkspaceAdaptersOptions): {
+  readonly toolAdapter: CaseWorkspaceToolAdapter;
+  readonly uiActions: CaseWorkspaceUiActions;
+} {
   const getSnapshot = () => selectCaseWorkspaceSnapshot(getState());
 
   const materializeActivity = (
@@ -167,185 +208,297 @@ export function createCaseWorkspaceAdapter({
     return activity;
   };
 
-  return {
-    getSnapshot,
+  const confirmTreatmentDates = (
+    input: Parameters<CaseWorkspaceUiActions["confirmTreatmentDates"]>[0],
+  ): ConfirmTreatmentDatesResult => {
+    const snapshot = getSnapshot();
+    const physicalTherapy = snapshot.baseEvidence.find(
+      (document) => document.id === "evidence-physical-therapy",
+    );
+    if (!physicalTherapy) {
+      throw new Error("The physical-therapy evidence record is unavailable.");
+    }
 
-    recordActivity,
+    const validated = validateTreatmentDates(input, physicalTherapy.document_date);
+    if (confirmationsMatch(snapshot.treatmentDateConfirmation, validated)) {
+      return {
+        action: "unchanged",
+        confirmation: snapshot.treatmentDateConfirmation!,
+        readiness: snapshot.readiness,
+        draft_invalidated: false,
+      };
+    }
 
-    confirmTreatmentDates(input, actor): ConfirmTreatmentDatesResult {
-      const snapshot = getSnapshot();
-      const physicalTherapy = snapshot.baseEvidence.find(
-        (document) => document.id === "evidence-physical-therapy",
-      );
-      if (!physicalTherapy) {
-        throw new Error("The physical-therapy evidence record is unavailable.");
-      }
+    const occurredAt = now();
+    const confirmation = createTreatmentDateConfirmation(validated, occurredAt);
+    const draftInvalidated = snapshot.appealDraft !== null;
+    const approvalInvalidated = snapshot.appealApproval !== null;
+    const isUpdate = snapshot.treatmentDateConfirmation !== null;
+    const activity = materializeActivity(
+      {
+        title: draftInvalidated ? "Treatment dates updated" : "Treatment dates confirmed",
+        category: "PREPARE",
+        actor: "HUMAN",
+        outcome: "completed",
+        impact: draftInvalidated
+          ? approvalInvalidated
+            ? "Case workspace updated; the previous draft and package approval were cleared. Nothing submitted."
+            : "Case workspace updated; the previous draft must be prepared again. Nothing submitted."
+          : "Case workspace updated; nothing submitted",
+      },
+      occurredAt,
+    );
 
-      const validated = validateTreatmentDates(input, physicalTherapy.document_date);
-      if (confirmationsMatch(snapshot.treatmentDateConfirmation, validated)) {
-        return {
-          action: "unchanged",
-          confirmation: snapshot.treatmentDateConfirmation!,
-          readiness: snapshot.readiness,
-          draft_invalidated: false,
-        };
-      }
+    const nextState = applyAction({
+      type: "treatment_dates_confirmed",
+      confirmation,
+      appealDraft: null,
+      appealApproval: null,
+      activity,
+    });
+    const nextSnapshot = selectCaseWorkspaceSnapshot(nextState);
 
-      const occurredAt = now();
-      const confirmation = createTreatmentDateConfirmation(validated, occurredAt);
-      const draftInvalidated = snapshot.appealDraft !== null;
-      const isUpdate = snapshot.treatmentDateConfirmation !== null;
-      const activity = materializeActivity(
-        {
-          title: draftInvalidated ? "Treatment dates updated" : "Treatment dates confirmed",
+    return {
+      action: isUpdate ? "updated" : "confirmed",
+      confirmation,
+      readiness: nextSnapshot.readiness,
+      draft_invalidated: draftInvalidated,
+    };
+  };
+
+  const prepareAppeal = (actor: WorkspaceActor): PrepareAppealResult => {
+    const snapshot = getSnapshot();
+
+    try {
+      if (
+        snapshot.appealDraft &&
+        confirmationsMatch(
+          snapshot.treatmentDateConfirmation,
+          snapshot.appealDraft.treatment_date_confirmation,
+        )
+      ) {
+        recordActivity({
+          title: "Existing appeal draft opened",
           category: "PREPARE",
           actor,
           outcome: "completed",
-          impact: draftInvalidated
-            ? "Case workspace updated; the previous draft must be prepared again. Nothing submitted."
-            : "Case workspace updated; nothing submitted",
+          impact: "No new draft created; nothing submitted",
+          ...(actor === "AGENT" ? { toolName: "prepare_appeal" } : {}),
+        });
+        return {
+          case_id: snapshot.caseId,
+          action: "reused",
+          draft: snapshot.appealDraft,
+        };
+      }
+
+      if (!snapshot.readiness.ready_to_prepare || !snapshot.treatmentDateConfirmation) {
+        throw new PrepareBlockedError(snapshot);
+      }
+
+      const occurredAt = now();
+      const appealDraft = createAppealDraft(snapshot, occurredAt);
+      const activity = materializeActivity(
+        {
+          title: "Appeal draft prepared",
+          category: "PREPARE",
+          actor,
+          outcome: "completed",
+          impact: "Draft created in ASSERA; nothing submitted",
+          ...(actor === "AGENT" ? { toolName: "prepare_appeal" } : {}),
         },
         occurredAt,
       );
-
-      const nextState = applyAction({
-        type: "treatment_dates_confirmed",
-        confirmation,
-        appealDraft: null,
+      applyAction({
+        type: "appeal_draft_prepared",
+        appealDraft,
+        appealApproval: null,
         activity,
       });
-      const nextSnapshot = selectCaseWorkspaceSnapshot(nextState);
 
       return {
-        action: isUpdate ? "updated" : "confirmed",
-        confirmation,
-        readiness: nextSnapshot.readiness,
-        draft_invalidated: draftInvalidated,
+        case_id: snapshot.caseId,
+        action: "created",
+        draft: appealDraft,
       };
-    },
-
-    prepareAppeal(actor: WorkspaceActor): PrepareAppealResult {
-      const snapshot = getSnapshot();
-
-      try {
-        if (
-          snapshot.appealDraft &&
-          confirmationsMatch(
-            snapshot.treatmentDateConfirmation,
-            snapshot.appealDraft.treatment_date_confirmation,
-          )
-        ) {
-          recordActivity({
-            title: "Existing appeal draft opened",
-            category: "PREPARE",
-            actor,
-            outcome: "completed",
-            impact: "No new draft created; nothing submitted",
-            ...(actor === "AGENT" ? { toolName: "prepare_appeal" } : {}),
-          });
-          return {
-            case_id: snapshot.caseId,
-            action: "reused",
-            draft: snapshot.appealDraft,
-          };
-        }
-
-        if (
-          !snapshot.readiness.ready_to_prepare ||
-          !snapshot.treatmentDateConfirmation
-        ) {
-          throw new PrepareBlockedError(snapshot);
-        }
-
-        const occurredAt = now();
-        const appealDraft = createAppealDraft(snapshot, occurredAt);
-        const activity = materializeActivity(
-          {
-            title: "Appeal draft prepared",
-            category: "PREPARE",
-            actor,
-            outcome: "completed",
-            impact: "Draft created in ASSERA; nothing submitted",
-            ...(actor === "AGENT" ? { toolName: "prepare_appeal" } : {}),
-          },
-          occurredAt,
-        );
-        applyAction({
-          type: "appeal_draft_prepared",
-          appealDraft,
-          activity,
+    } catch (error) {
+      if (error instanceof PrepareBlockedError) {
+        recordActivity({
+          title: "Appeal preparation blocked",
+          category: "PREPARE",
+          actor,
+          outcome: "blocked",
+          impact:
+            "Treatment dates require confirmation; no draft created or submitted",
+          ...(actor === "AGENT" ? { toolName: "prepare_appeal" } : {}),
         });
+      }
+      throw error;
+    }
+  };
 
-        return {
-          case_id: snapshot.caseId,
-          action: "created",
-          draft: appealDraft,
-        };
+  const updateDraftStatement = (statement: string): AppealDraft => {
+    const snapshot = getSnapshot();
+    if (!snapshot.appealDraft) {
+      throw new DraftStatementError(
+        "DRAFT_NOT_FOUND",
+        "Prepare an appeal draft before saving changes.",
+      );
+    }
+
+    const validatedStatement = validateDraftStatement(statement);
+    if (validatedStatement === snapshot.appealDraft.statement) {
+      return snapshot.appealDraft;
+    }
+
+    const occurredAt = now();
+    const appealDraft = {
+      ...snapshot.appealDraft,
+      version: snapshot.appealDraft.version + 1,
+      statement: validatedStatement,
+      updated_at: occurredAt,
+    };
+    const approvalInvalidated = snapshot.appealApproval !== null;
+    const activity = materializeActivity(
+      {
+        title: "Appeal draft updated",
+        category: "PREPARE",
+        actor: "HUMAN",
+        outcome: "completed",
+        impact: approvalInvalidated
+          ? "Draft updated; previous package approval cleared. Nothing submitted."
+          : "Draft updated in ASSERA; nothing submitted",
+      },
+      occurredAt,
+    );
+    applyAction({
+      type: "appeal_draft_updated",
+      appealDraft,
+      appealApproval: null,
+      activity,
+    });
+    return appealDraft;
+  };
+
+  const approveCurrentPackage = (
+    packageVersion: string,
+    confirmation: boolean,
+  ): AppealApproval => {
+    const snapshot = getSnapshot();
+    if (
+      snapshot.appealApproval?.package_version === packageVersion &&
+      snapshot.appealDraft?.version === snapshot.appealApproval.draft_version
+    ) {
+      return snapshot.appealApproval;
+    }
+
+    const occurredAt = now();
+    const appealApproval = approveAppealPackage(
+      snapshot,
+      packageVersion,
+      confirmation,
+      "HUMAN",
+      occurredAt,
+    );
+    const activity = materializeActivity(
+      {
+        title: "Appeal package approved",
+        category: "CONTROL",
+        actor: "HUMAN",
+        outcome: "completed",
+        impact: "Approval recorded for this package version; nothing submitted",
+      },
+      occurredAt,
+    );
+    applyAction({ type: "appeal_package_approved", appealApproval, activity });
+    return appealApproval;
+  };
+
+  const revokeAppealApproval = (): boolean => {
+    if (!getSnapshot().appealApproval) return false;
+
+    const occurredAt = now();
+    const activity = materializeActivity(
+      {
+        title: "Package approval revoked",
+        category: "CONTROL",
+        actor: "HUMAN",
+        outcome: "completed",
+        impact: "Local approval removed; nothing submitted",
+      },
+      occurredAt,
+    );
+    applyAction({ type: "appeal_approval_revoked", activity });
+    return true;
+  };
+
+  const toolAdapter: CaseWorkspaceToolAdapter = {
+    getSnapshot,
+    prepareAppeal: () => prepareAppeal("AGENT"),
+    recordReadActivity: (
+      input: Omit<ReadWorkspaceActivity, "id" | "occurredAt">,
+    ) => recordActivity(input),
+    previewAppeal: (): AppealPackagePreview => {
+      try {
+        const preview = buildAppealPackagePreview(getSnapshot());
+        recordActivity({
+          title: "Appeal package preview accessed",
+          category: "READ",
+          actor: "AGENT",
+          outcome: "completed",
+          impact: "No information changed",
+          toolName: "preview_appeal",
+        });
+        return preview;
       } catch (error) {
-        if (error instanceof PrepareBlockedError) {
+        if (error instanceof AppealPackageError) {
           recordActivity({
-            title: "Appeal preparation blocked",
-            category: "PREPARE",
-            actor,
+            title: "Appeal package preview unavailable",
+            category: "READ",
+            actor: "AGENT",
             outcome: "blocked",
-            impact:
-              "Treatment dates require confirmation; no draft created or submitted",
-            ...(actor === "AGENT" ? { toolName: "prepare_appeal" } : {}),
+            impact: error.code === "PREVIEW_NOT_AVAILABLE"
+              ? "Prepare an appeal draft first; no information changed"
+              : "Recheck the current workspace; no information changed",
+            toolName: "preview_appeal",
           });
         }
         throw error;
       }
     },
-
-    updateDraftStatement(statement, actor): AppealDraft {
-      const snapshot = getSnapshot();
-      if (!snapshot.appealDraft) {
-        throw new DraftStatementError(
-          "DRAFT_NOT_FOUND",
-          "Prepare an appeal draft before saving changes.",
-        );
-      }
-
-      const occurredAt = now();
-      const appealDraft = {
-        ...snapshot.appealDraft,
-        statement: validateDraftStatement(statement),
-        updated_at: occurredAt,
-      };
-      const activity = materializeActivity(
-        {
-          title: "Appeal draft updated",
-          category: "PREPARE",
-          actor,
-          outcome: "completed",
-          impact: "Draft updated in ASSERA; nothing submitted",
-        },
-        occurredAt,
-      );
-      applyAction({
-        type: "appeal_draft_updated",
-        appealDraft,
-        activity,
-      });
-      return appealDraft;
-    },
   };
+
+  const uiActions: CaseWorkspaceUiActions = {
+    confirmTreatmentDates,
+    prepareAppeal: () => prepareAppeal("HUMAN"),
+    updateDraftStatement,
+    approveAppealPackage: approveCurrentPackage,
+    revokeAppealApproval,
+  };
+
+  return { toolAdapter, uiActions };
 }
 
 export function createStandaloneCaseWorkspace(caseId: string): {
-  readonly adapter: CaseWorkspaceAdapter;
+  readonly toolAdapter: CaseWorkspaceToolAdapter;
+  readonly uiActions: CaseWorkspaceUiActions;
   readonly getState: () => CaseWorkspaceState;
 } {
   let state = createInitialCaseWorkspaceState(caseId);
   const getState = () => state;
-  const adapter = createCaseWorkspaceAdapter({
+  const adapters = createCaseWorkspaceAdapters({
     getState,
     applyAction: (action) => {
       state = caseWorkspaceReducer(state, action);
       return state;
     },
   });
-  return { adapter, getState };
+  return { ...adapters, getState };
 }
 
-export { DraftStatementError, PrepareBlockedError };
+export {
+  AppealApprovalError,
+  AppealPackageError,
+  DraftStatementError,
+  PrepareBlockedError,
+};

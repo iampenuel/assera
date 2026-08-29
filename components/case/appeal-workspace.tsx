@@ -4,18 +4,27 @@ import { useState } from "react";
 import { DraftStatementError } from "../../domain/appeal-draft";
 import { formatIsoDate, formatIsoTimestamp } from "../../domain/format-date";
 import type {
+  AppealApproval,
   AppealDraft,
+  AppealPackagePreview,
   AppealReadiness,
   EvidenceDocument,
   TreatmentDateConfirmation,
 } from "../../types/case";
+import { AppealPackageReview } from "./appeal-package-review";
 
 interface AppealWorkspaceProps {
   readonly draft: AppealDraft | null;
   readonly evidence: readonly EvidenceDocument[];
   readonly readiness: AppealReadiness;
   readonly confirmation: TreatmentDateConfirmation | null;
+  readonly preview: AppealPackagePreview | null;
   readonly onSaveStatement: (statement: string) => AppealDraft;
+  readonly onApprovePackage: (
+    packageVersion: string,
+    confirmation: boolean,
+  ) => AppealApproval;
+  readonly onRevokeApproval: () => boolean;
 }
 
 export function AppealWorkspace({
@@ -23,7 +32,10 @@ export function AppealWorkspace({
   evidence,
   readiness,
   confirmation,
+  preview,
   onSaveStatement,
+  onApprovePackage,
+  onRevokeApproval,
 }: AppealWorkspaceProps) {
   if (!draft) {
     return (
@@ -56,7 +68,10 @@ export function AppealWorkspace({
       key={draft.id}
       draft={draft}
       evidence={evidence}
+      preview={preview!}
       onSaveStatement={onSaveStatement}
+      onApprovePackage={onApprovePackage}
+      onRevokeApproval={onRevokeApproval}
     />
   );
 }
@@ -64,8 +79,14 @@ export function AppealWorkspace({
 function PreparedAppealWorkspace({
   draft,
   evidence,
+  preview,
   onSaveStatement,
-}: Pick<AppealWorkspaceProps, "evidence" | "onSaveStatement"> & {
+  onApprovePackage,
+  onRevokeApproval,
+}: Pick<
+  AppealWorkspaceProps,
+  "evidence" | "preview" | "onSaveStatement" | "onApprovePackage" | "onRevokeApproval"
+> & {
   readonly draft: AppealDraft;
 }) {
   const [statement, setStatement] = useState(draft.statement);
@@ -80,9 +101,17 @@ function PreparedAppealWorkspace({
     setError(null);
     setMessage(null);
     try {
+      const previousVersion = draft.version;
+      const hadApproval = preview?.approval.status === "approved";
       const updated = onSaveStatement(statement);
       setStatement(updated.statement);
-      setMessage("Changes saved locally. Nothing was submitted.");
+      setMessage(
+        updated.version === previousVersion
+          ? "No content changes to save. The current package version and approval remain unchanged."
+          : hadApproval
+            ? "Changes saved locally. Previous package approval cleared. Nothing submitted."
+            : "Changes saved locally. Nothing was submitted.",
+      );
     } catch (caught) {
       setError(
         caught instanceof DraftStatementError
@@ -93,6 +122,7 @@ function PreparedAppealWorkspace({
   };
 
   return (
+    <>
     <section
       id="appeal-workspace"
       className="appeal-workspace"
@@ -110,6 +140,7 @@ function PreparedAppealWorkspace({
 
       <dl className="draft-metadata">
         <div><dt>Case</dt><dd>{draft.case_id}</dd></div>
+        <div><dt>Draft version</dt><dd>v{draft.version}</dd></div>
         <div><dt>Destination</dt><dd>Northstar Health Appeals Department</dd></div>
         <div><dt>Created</dt><dd>{formatIsoTimestamp(draft.created_at)}</dd></div>
         <div>
@@ -162,5 +193,14 @@ function PreparedAppealWorkspace({
         </span>
       </div>
     </section>
+    {preview ? (
+      <AppealPackageReview
+        key={preview.package_version}
+        preview={preview}
+        onApprove={onApprovePackage}
+        onRevoke={onRevokeApproval}
+      />
+    ) : null}
+    </>
   );
 }

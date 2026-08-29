@@ -32,7 +32,7 @@ function focusWorkspaceElement(id: string, selector?: string) {
 }
 
 export function CaseDashboard({ caseId }: { readonly caseId: string }) {
-  const { adapter, snapshot } = useCaseWorkspace(caseId);
+  const { toolAdapter, uiActions, snapshot } = useCaseWorkspace(caseId);
   const [webMCPStatus, setWebMCPStatus] =
     useState<WebMCPStatus>("checking");
   const [dateFormOpen, setDateFormOpen] = useState(false);
@@ -42,7 +42,7 @@ export function CaseDashboard({ caseId }: { readonly caseId: string }) {
     let unregister: (() => void) | undefined;
 
     void registerCaseTools({
-      adapter,
+      adapter: toolAdapter,
       onStatusChange: (status) => {
         if (active) setWebMCPStatus(status);
       },
@@ -58,7 +58,7 @@ export function CaseDashboard({ caseId }: { readonly caseId: string }) {
       active = false;
       unregister?.();
     };
-  }, [adapter]);
+  }, [toolAdapter]);
 
   const openTreatmentDates = () => {
     setDateFormOpen(true);
@@ -71,20 +71,20 @@ export function CaseDashboard({ caseId }: { readonly caseId: string }) {
   };
 
   const confirmTreatmentDates = (input: ConfirmTreatmentDatesInput) => {
-    const result = adapter.confirmTreatmentDates(input, "HUMAN");
+    const result = uiActions.confirmTreatmentDates(input);
     setDateFormOpen(false);
     focusWorkspaceElement("treatment-dates");
     return result;
   };
 
   const prepareAppeal = () => {
-    const result = adapter.prepareAppeal("HUMAN");
+    const result = uiActions.prepareAppeal();
     focusWorkspaceElement("appeal-workspace");
     return result;
   };
 
-  const reviewDraft = () => {
-    focusWorkspaceElement("appeal-workspace", "#appeal-draft-statement");
+  const reviewPackage = () => {
+    focusWorkspaceElement("appeal-package-review", "#appeal-package-review-title");
   };
 
   return (
@@ -124,15 +124,18 @@ export function CaseDashboard({ caseId }: { readonly caseId: string }) {
         onCancelDates={closeTreatmentDates}
         onConfirmDates={confirmTreatmentDates}
         onSaveDraft={(statement) =>
-          adapter.updateDraftStatement(statement, "HUMAN")
+          uiActions.updateDraftStatement(statement)
         }
+        onApprovePackage={uiActions.approveAppealPackage}
+        onRevokeApproval={uiActions.revokeAppealApproval}
       />
       <RightRail
         snapshot={snapshot}
         status={webMCPStatus}
         onReviewDates={openTreatmentDates}
         onPrepare={prepareAppeal}
-        onReviewDraft={reviewDraft}
+        onReviewPackage={reviewPackage}
+        onRevokeApproval={uiActions.revokeAppealApproval}
       />
     </main>
   );

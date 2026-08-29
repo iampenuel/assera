@@ -2,14 +2,15 @@ import { SUPPORTED_CASE_ID } from "../data/case-fixture";
 import { createStandaloneCaseWorkspace } from "../domain/case-workspace";
 import type {
   AppealEvidenceResult,
+  AppealPackageToolResult,
   AppealReadiness,
-  CaseWorkspaceAdapter,
+  CaseWorkspaceToolAdapter,
   CoverageRequirementsResult,
   DenialDetails,
   PrepareAppealResult,
+  ReadWorkspaceActivity,
   WebMCPStatus,
   WorkspaceActivity,
-  WorkspaceActivityInput,
 } from "../types/case";
 import type { CaseToolInput } from "./case-tool-helpers";
 import {
@@ -26,6 +27,7 @@ import {
   listAppealEvidence,
 } from "./evidence-tools";
 import { PREPARE_APPEAL_TOOL_NAME, prepareAppeal } from "./prepare-tools";
+import { PREVIEW_APPEAL_TOOL_NAME, previewAppeal } from "./preview-tools";
 import {
   APPEAL_READINESS_TOOL_NAME,
   checkAppealReadiness,
@@ -36,19 +38,21 @@ type CaseToolResult =
   | CoverageRequirementsResult
   | AppealEvidenceResult
   | AppealReadiness
-  | PrepareAppealResult;
+  | PrepareAppealResult
+  | AppealPackageToolResult;
 
 export type CaseToolName =
   | typeof DENIAL_DETAILS_TOOL_NAME
   | typeof COVERAGE_REQUIREMENTS_TOOL_NAME
   | typeof APPEAL_EVIDENCE_TOOL_NAME
   | typeof APPEAL_READINESS_TOOL_NAME
-  | typeof PREPARE_APPEAL_TOOL_NAME;
+  | typeof PREPARE_APPEAL_TOOL_NAME
+  | typeof PREVIEW_APPEAL_TOOL_NAME;
 
 export type CaseToolActivityEvent = WorkspaceActivity;
 
 interface RegistrationOptions {
-  readonly adapter?: CaseWorkspaceAdapter;
+  readonly adapter?: CaseWorkspaceToolAdapter;
   readonly onActivity?: (event: CaseToolActivityEvent) => void;
   readonly onStatusChange: (status: WebMCPStatus) => void;
 }
@@ -64,9 +68,12 @@ interface CaseToolDefinition {
   readonly annotations: WebMCPToolAnnotations;
   readonly execute: (
     input: unknown,
-    adapter: CaseWorkspaceAdapter,
+    adapter: CaseWorkspaceToolAdapter,
   ) => CaseToolResult;
-  readonly successActivity?: WorkspaceActivityInput;
+  readonly successActivity?: Omit<
+    ReadWorkspaceActivity,
+    "id" | "occurredAt"
+  >;
 }
 
 export const CASE_TOOL_NAMES = [
@@ -75,6 +82,7 @@ export const CASE_TOOL_NAMES = [
   APPEAL_EVIDENCE_TOOL_NAME,
   APPEAL_READINESS_TOOL_NAME,
   PREPARE_APPEAL_TOOL_NAME,
+  PREVIEW_APPEAL_TOOL_NAME,
 ] as const;
 
 const caseToolDefinitions: readonly CaseToolDefinition[] = [
@@ -157,10 +165,21 @@ const caseToolDefinitions: readonly CaseToolDefinition[] = [
     },
     execute: (input, adapter) => prepareAppeal(input, adapter),
   },
+  {
+    name: PREVIEW_APPEAL_TOOL_NAME,
+    title: "Preview appeal package",
+    description:
+      "Use this read-only tool to inspect the exact current appeal package in ASSERA, including its destination, statement, included documents, shared information, and human-approval status. It does not approve, submit, or send anything.",
+    annotations: {
+      readOnlyHint: true,
+      untrustedContentHint: true,
+    },
+    execute: (input, adapter) => previewAppeal(input, adapter),
+  },
 ];
 
 function createRegisteredTools(
-  adapter: CaseWorkspaceAdapter,
+  adapter: CaseWorkspaceToolAdapter,
   onActivity?: RegistrationOptions["onActivity"],
 ): WebMCPTool<CaseToolInput, CaseToolResult>[] {
   const caseId = adapter.getSnapshot().caseId;
@@ -177,7 +196,7 @@ function createRegisteredTools(
       try {
         const result = definition.execute(input, adapter);
         if (definition.successActivity) {
-          adapter.recordActivity(definition.successActivity);
+          adapter.recordReadActivity(definition.successActivity);
         }
         return result;
       } finally {
@@ -193,7 +212,7 @@ function createRegisteredTools(
 }
 
 export async function registerCaseTools({
-  adapter = createStandaloneCaseWorkspace(SUPPORTED_CASE_ID).adapter,
+  adapter = createStandaloneCaseWorkspace(SUPPORTED_CASE_ID).toolAdapter,
   onActivity,
   onStatusChange,
 }: RegistrationOptions): Promise<ToolRegistration> {
@@ -224,16 +243,23 @@ export { getCoverageRequirements } from "./coverage-tools";
 export { getDenialDetails } from "./denial-tools";
 export { listAppealEvidence } from "./evidence-tools";
 export { prepareAppeal } from "./prepare-tools";
+export { previewAppeal } from "./preview-tools";
 export { checkAppealReadiness } from "./readiness-tools";
 export { CaseToolError } from "./case-tool-helpers";
 export {
   caseWorkspaceReducer,
-  createCaseWorkspaceAdapter,
+  createCaseWorkspaceAdapters,
   createInitialCaseWorkspaceState,
   createStandaloneCaseWorkspace,
   selectCaseWorkspaceSnapshot,
 } from "../domain/case-workspace";
 export { createAppealDraft, PrepareBlockedError } from "../domain/appeal-draft";
+export {
+  approveAppealPackage,
+  AppealApprovalError,
+  AppealPackageError,
+  buildAppealPackagePreview,
+} from "../domain/appeal-package";
 export {
   deriveEffectiveEvidence,
   TreatmentDateValidationError,

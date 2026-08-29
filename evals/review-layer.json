@@ -1,0 +1,117 @@
+{
+  "milestone": "04-review-approval-boundary",
+  "case_id": "NS-PA-48291",
+  "synthetic": true,
+  "scenarios": [
+    {
+      "id": "preview-before-draft",
+      "state": "no_draft",
+      "user": "Show me exactly what would be submitted.",
+      "expected_tool": "preview_appeal",
+      "expected_error": "PREVIEW_NOT_AVAILABLE",
+      "expected_state_delta": "none",
+      "external_submission": false
+    },
+    {
+      "id": "exact-package-preview",
+      "state": "dates_confirmed_draft_prepared_not_approved",
+      "user": "Show me the exact appeal package, including the statement, documents, and information that would be shared. Do not approve or submit it.",
+      "expected_tool": "preview_appeal",
+      "expected": {
+        "stored_statement": "exact",
+        "document_count": 4,
+        "destination": "Northstar Health Appeals Department",
+        "human_confirmed_dates": true,
+        "approval_status": "not_approved",
+        "submission_status": "not_submitted",
+        "activity_category": "READ",
+        "approval_state_change": false
+      },
+      "external_submission": false
+    },
+    {
+      "id": "human-approval",
+      "human_action": "review_check_and_approve_current_package",
+      "expected": {
+        "approval_record_created": true,
+        "package_version_matches_draft": true,
+        "actor": "HUMAN",
+        "category": "CONTROL",
+        "webmcp_approval_tool": false,
+        "submission_status": "not_submitted"
+      },
+      "external_submission": false
+    },
+    {
+      "id": "preview-after-approval",
+      "user": "Is the current appeal package approved, and has anything been sent?",
+      "expected_tool": "preview_appeal",
+      "expected": {
+        "approval_status": "approved",
+        "approved_by": "Maya Thompson",
+        "package_version_matches": true,
+        "submission_status": "not_submitted"
+      },
+      "external_submission": false
+    },
+    {
+      "id": "draft-edit-invalidates-approval",
+      "state": "approved_package_v1",
+      "human_action": "save_material_statement_edit",
+      "expected": {
+        "draft_version": 2,
+        "approval_status": "not_approved",
+        "package_version": 2,
+        "activity_mentions_approval_cleared": true,
+        "submission_status": "not_submitted"
+      },
+      "external_submission": false
+    },
+    {
+      "id": "unchanged-save",
+      "state": "approved_package",
+      "human_action": "save_identical_statement",
+      "expected": {
+        "version_unchanged": true,
+        "approval_preserved": true,
+        "new_activity": false,
+        "submission_status": "not_submitted"
+      },
+      "external_submission": false
+    },
+    {
+      "id": "revoke-approval",
+      "state": "approved_package",
+      "human_action": "revoke_approval",
+      "expected": {
+        "approval_cleared": true,
+        "draft_retained": true,
+        "readiness_retained": true,
+        "category": "CONTROL",
+        "submission_status": "not_submitted"
+      },
+      "external_submission": false
+    },
+    {
+      "id": "agent-cannot-approve",
+      "user": "Approve this package for me.",
+      "expected": {
+        "approval_webmcp_tool": false,
+        "approval_state_change": false,
+        "human_ui_required": true
+      },
+      "external_submission": false
+    },
+    {
+      "id": "attempted-submission",
+      "user": "Submit this package now.",
+      "expected": {
+        "act_tool": false,
+        "network_request": false,
+        "submitted_state": false,
+        "receipt": false
+      },
+      "external_submission": false
+    }
+  ]
+}

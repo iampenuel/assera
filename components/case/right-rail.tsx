@@ -8,7 +8,7 @@ import type {
 const statusCopy: Record<WebMCPStatus, { label: string; className: string; detail?: string }> = {
   checking: { label: "Connecting", className: "checking" },
   available: { label: "Active", className: "active" },
-  unavailable: { label: "Preview mode", className: "preview", detail: "WebMCP is not available in this browser. Human confirmation and local draft preparation remain available." },
+  unavailable: { label: "Preview mode", className: "preview", detail: "The agent package-preview tool is unavailable in this browser. Human review, confirmation, preparation, approval, and revocation remain available in ASSERA." },
   error: { label: "Unavailable", className: "unavailable", detail: "The WebMCP tools could not connect. No case information was affected." },
 };
 
@@ -23,20 +23,36 @@ function NextSafeStep({
   snapshot,
   onReviewDates,
   onPrepare,
-  onReviewDraft,
+  onReviewPackage,
+  onRevokeApproval,
 }: {
   readonly snapshot: CaseWorkspaceSnapshot;
   readonly onReviewDates: () => void;
   readonly onPrepare: () => PrepareAppealResult;
-  readonly onReviewDraft: () => void;
+  readonly onReviewPackage: () => void;
+  readonly onRevokeApproval: () => boolean;
 }) {
   if (snapshot.appealDraft) {
+    if (snapshot.appealApproval) {
+      return (
+        <section id="next-safe-step" className="rail-card next-step-card approved-next-step" aria-labelledby="next-step-title">
+          <p className="case-section-label">APPROVAL RECORDED</p>
+          <h2 id="next-step-title">Package approved</h2>
+          <p>Maya approved this exact package version for a future simulated submission.</p>
+          <button type="button" onClick={onReviewPackage}>Review approved package <span aria-hidden="true">→</span></button>
+          <button className="rail-secondary-action" type="button" onClick={() => onRevokeApproval()}>Revoke approval</button>
+          <small>Nothing has been sent to Northstar Health. No submission tool is available yet.</small>
+        </section>
+      );
+    }
+
     return (
       <section id="next-safe-step" className="rail-card next-step-card" aria-labelledby="next-step-title">
         <p className="case-section-label">NEXT SAFE STEP</p>
-        <h2 id="next-step-title">Review the appeal draft</h2>
-        <p>A structured draft is ready in ASSERA. Nothing has been submitted.</p>
-        <button type="button" onClick={onReviewDraft}>Review draft <span aria-hidden="true">→</span></button>
+        <h2 id="next-step-title">Review the appeal package</h2>
+        <p>Review the statement, included documents, and information that would be shared before giving approval.</p>
+        <button type="button" onClick={onReviewPackage}>Review package <span aria-hidden="true">→</span></button>
+        <small>Nothing has been submitted.</small>
       </section>
     );
   }
@@ -94,7 +110,7 @@ function AgentPermissions({
       <p id="permissions-title" className="case-section-label">AGENT ACCESS &amp; PERMISSIONS</p>
       <dl>
         <div>
-          <dt>READ</dt><dd>Your agent can read denial details, coverage requirements, available evidence, and readiness.</dd>
+          <dt>READ</dt><dd>Your agent can read denial details, coverage requirements, evidence, readiness, and the exact appeal-package preview.</dd>
           <span className={`permission-status ${readStatus.className}`}>{readStatus.label}</span>
         </div>
         <div>
@@ -102,7 +118,11 @@ function AgentPermissions({
           <span className={`permission-status ${prepareState.className}`}>{prepareState.label}</span>
         </div>
         <div>
-          <dt>ACT</dt><dd>No submission tool exists in this milestone. Future consequential actions will require explicit approval.</dd>
+          <dt>CONTROL</dt><dd>Only Maya can approve or revoke the exact package version in the ASSERA interface.</dd>
+          <span className="permission-status neutral">Human only</span>
+        </div>
+        <div>
+          <dt>ACT</dt><dd>No submission tool exists. Nothing can be sent in this milestone.</dd>
           <span className="permission-status neutral">Not available</span>
         </div>
       </dl>
@@ -144,13 +164,15 @@ export function RightRail({
   status,
   onReviewDates,
   onPrepare,
-  onReviewDraft,
+  onReviewPackage,
+  onRevokeApproval,
 }: {
   readonly snapshot: CaseWorkspaceSnapshot;
   readonly status: WebMCPStatus;
   readonly onReviewDates: () => void;
   readonly onPrepare: () => PrepareAppealResult;
-  readonly onReviewDraft: () => void;
+  readonly onReviewPackage: () => void;
+  readonly onRevokeApproval: () => boolean;
 }) {
   return (
     <aside className="case-right-rail" aria-label="Case actions and agent access">
@@ -158,7 +180,8 @@ export function RightRail({
         snapshot={snapshot}
         onReviewDates={onReviewDates}
         onPrepare={onPrepare}
-        onReviewDraft={onReviewDraft}
+        onReviewPackage={onReviewPackage}
+        onRevokeApproval={onRevokeApproval}
       />
       <AgentPermissions status={status} snapshot={snapshot} />
       <ActivityPanel activities={snapshot.activities} />
