@@ -1,12 +1,14 @@
 import type { PatientCase } from "../types/case";
 
+export const SUPPORTED_CASE_ID = "NS-PA-48291";
+
 export const mayaCase = {
   patient: {
     name: "Maya Thompson",
     age: 34,
     location: "Pennsylvania",
   },
-  case_id: "NS-PA-48291",
+  case_id: SUPPORTED_CASE_ID,
   service: "MRI — Right Knee",
   decision: "denied",
   decision_date: "2026-08-25",
@@ -21,3 +23,7 @@ export const mayaCase = {
   requested_date: "2026-08-04",
   days_remaining: 62,
 } as const satisfies PatientCase;
+
+export function getCaseFixture(caseId: string): PatientCase | null {
+  return caseId === SUPPORTED_CASE_ID ? mayaCase : null;
+}

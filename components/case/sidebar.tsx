@@ -1,54 +1,59 @@
+import type { AppealReadiness } from "../../types/case";
 import { AsseraLogo } from "../brand/assera-logo";
-import { mayaCase } from "../../data/case-fixture";
-import { mayaEvidence } from "../../data/evidence-fixture";
-import { mayaCoveragePolicy } from "../../data/policy-fixture";
-import { evaluateAppealReadiness } from "../../domain/readiness";
 
 interface CaseNavigationProps {
-  activityCount: number;
-  mobile?: boolean;
+  readonly activityCount: number;
+  readonly evidenceCount: number;
+  readonly readiness: AppealReadiness;
+  readonly hasDraft: boolean;
+  readonly mobile?: boolean;
 }
 
-const readiness = evaluateAppealReadiness(
-  mayaCase.case_id,
-  mayaCoveragePolicy,
-  mayaEvidence,
-);
+export function CaseNavigation({
+  activityCount,
+  evidenceCount,
+  readiness,
+  hasDraft,
+  mobile = false,
+}: CaseNavigationProps) {
+  const items = [
+    { href: "#overview", label: "Overview" },
+    { href: "#evidence", label: "Evidence", badge: String(evidenceCount) },
+    {
+      href: "#requirements",
+      label: "Requirements",
+      badge: `${readiness.summary.complete}/${readiness.summary.total}`,
+    },
+    { href: "#next-safe-step", label: "Next safe step" },
+    ...(hasDraft
+      ? [{ href: "#appeal-workspace", label: "Appeal draft" }]
+      : []),
+  ];
 
-const baseItems = [
-  { href: "#overview", label: "Overview" },
-  { href: "#evidence", label: "Evidence", badge: String(mayaEvidence.length) },
-  {
-    href: "#requirements",
-    label: "Requirements",
-    badge: `${readiness.summary.complete}/${readiness.summary.total}`,
-  },
-  { href: "#next-safe-step", label: "Next safe step" },
-] as const;
-
-export function CaseNavigation({ activityCount, mobile = false }: CaseNavigationProps) {
   return (
     <nav className={mobile ? "case-navigation mobile" : "case-navigation"} aria-label="Case workspace">
-      {baseItems.map((item) => (
+      {items.map((item) => (
         <a key={item.href} href={item.href}>
           <span>{item.label}</span>
           {"badge" in item ? <span className="nav-badge">{item.badge}</span> : null}
         </a>
       ))}
-      <a href="#agent-activity">
-        <span>Agent activity</span>
+      <a href="#workspace-activity">
+        <span>Activity &amp; control</span>
         <span className="nav-badge">{activityCount}</span>
       </a>
     </nav>
   );
 }
 
-export function Sidebar({ activityCount }: { activityCount: number }) {
+type SidebarProps = Omit<CaseNavigationProps, "mobile">;
+
+export function Sidebar(props: SidebarProps) {
   return (
     <aside className="case-sidebar">
       <div>
         <AsseraLogo showWord />
-        <CaseNavigation activityCount={activityCount} />
+        <CaseNavigation {...props} />
       </div>
       <div className="sidebar-bottom">
         <div className="sidebar-help">

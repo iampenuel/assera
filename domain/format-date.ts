@@ -28,3 +28,14 @@ export function formatIsoDate(date: string, longMonth = false): string {
 
   return `${monthLabel} ${Number(day)}, ${year}`;
 }
+
+export function formatIsoTimestamp(timestamp: string): string {
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    timeZone: "UTC",
+  }).format(new Date(timestamp));
+}

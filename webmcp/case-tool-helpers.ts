@@ -1,4 +1,4 @@
-import { mayaCase } from "../data/case-fixture";
+import { SUPPORTED_CASE_ID } from "../data/case-fixture";
 
 export interface CaseToolInput {
   case_id: string;
@@ -16,25 +16,32 @@ export class CaseToolError extends Error {
   }
 }
 
-export const caseToolInputSchema = {
-  type: "object",
-  properties: {
-    case_id: {
-      type: "string",
-      const: mayaCase.case_id,
-      description: "The ASSERA prior-authorization case identifier.",
+export function createCaseToolInputSchema(caseId: string) {
+  return {
+    type: "object",
+    properties: {
+      case_id: {
+        type: "string",
+        const: caseId,
+        description: "The ASSERA prior-authorization case identifier.",
+      },
     },
-  },
-  required: ["case_id"],
-  additionalProperties: false,
-} as const;
+    required: ["case_id"],
+    additionalProperties: false,
+  } as const;
+}
+
+export const caseToolInputSchema = createCaseToolInputSchema(SUPPORTED_CASE_ID);
 
 export const readOnlyToolAnnotations = {
   readOnlyHint: true,
   untrustedContentHint: false,
 } as const;
 
-export function requireKnownCase(input: unknown): typeof mayaCase {
+export function requireKnownCase(
+  input: unknown,
+  currentCaseId = SUPPORTED_CASE_ID,
+): CaseToolInput {
   if (typeof input !== "object" || input === null || Array.isArray(input)) {
     throw new CaseToolError("INVALID_INPUT", "A valid case_id is required.");
   }
@@ -50,12 +57,12 @@ export function requireKnownCase(input: unknown): typeof mayaCase {
     throw new CaseToolError("INVALID_INPUT", "A valid case_id is required.");
   }
 
-  if (input.case_id !== mayaCase.case_id) {
+  if (input.case_id !== currentCaseId) {
     throw new CaseToolError(
       "CASE_NOT_FOUND",
       `No ASSERA case was found for case_id “${input.case_id}”.`,
     );
   }
 
-  return mayaCase;
+  return { case_id: input.case_id };
 }

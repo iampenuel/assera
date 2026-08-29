@@ -77,11 +77,34 @@ test("server-renders Maya's complete denial dashboard on the case route", async 
   assert.match(html, /Persistent symptoms after conservative treatment/);
   assert.match(html, /Treatment dates need confirmation/);
   assert.match(html, /fictional Northstar Health policy/);
-  assert.match(html, /No appeal-preparation tool is available/);
-  assert.match(html, /No submission tool is available/);
-  assert.match(html, /No agent activity yet/);
+  assert.match(html, /Confirm treatment dates before an appeal draft can be prepared/);
+  assert.match(html, /No submission tool exists in this milestone/);
+  assert.match(html, /No workspace activity yet/);
   assert.match(html, /Review &amp; confirm dates/);
+  assert.match(html, /Treatment dates need confirmation/);
+  assert.match(html, /Confirm dates/);
+  assert.match(html, /PREPARE/);
+  assert.match(html, /Blocked/);
+  assert.match(html, /ACT/);
+  assert.match(html, /Not available/);
+  assert.doesNotMatch(html, /DRAFT — NOT SUBMITTED|Save changes|Submit appeal/);
   assert.match(html, /(?:\/|%2F)brand(?:\/|%2F)assera-mark-espresso\.png/);
   assert.doesNotMatch(html, /codex-preview|react-loading-skeleton/i);
   assert.doesNotMatch(html, /Prior authorization confirmed/);
+});
+
+test("the case index redirects to the single supported case", async () => {
+  const response = await render("/case");
+  assert.ok([301, 302, 307, 308].includes(response.status));
+  assert.equal(
+    new URL(response.headers.get("location"), "http://localhost").pathname,
+    "/case/NS-PA-48291",
+  );
+});
+
+test("an unknown case does not silently render Maya's workspace", async () => {
+  const response = await render("/case/UNKNOWN");
+  assert.equal(response.status, 404);
+  const html = await response.text();
+  assert.doesNotMatch(html, /Maya Thompson|MRI — Right Knee|Private case workspace/);
 });

@@ -1,32 +1,27 @@
-import { mayaCase } from "../../data/case-fixture";
-import { mayaEvidence } from "../../data/evidence-fixture";
 import { formatIsoDate } from "../../domain/format-date";
+import type { EvidenceDocument, PatientCase } from "../../types/case";
 
-const physicalTherapyEvidence = mayaEvidence.find(
-  (document) => document.id === "evidence-physical-therapy",
-);
-
-export function CaseHeader() {
+export function CaseHeader({ caseData }: { caseData: PatientCase }) {
   return (
     <section id="overview" className="case-overview" aria-labelledby="case-title">
       <div className="case-identity">
         <div className="case-status-line">
           <span className="denied-badge">DENIED</span>
-          <span>Case {mayaCase.case_id}</span>
+          <span>Case {caseData.case_id}</span>
         </div>
-        <h1 id="case-title">{mayaCase.service}</h1>
-        <p className="case-payer">{mayaCase.payer}</p>
+        <h1 id="case-title">{caseData.service}</h1>
+        <p className="case-payer">{caseData.payer}</p>
         <p className="request-meta">
-          Requested by {mayaCase.requested_by} <span aria-hidden="true">•</span>{" "}
-          Requested on {formatIsoDate(mayaCase.requested_date, true)}
+          Requested by {caseData.requested_by} <span aria-hidden="true">•</span>{" "}
+          Requested on {formatIsoDate(caseData.requested_date, true)}
         </p>
       </div>
       <div className="deadline-panel">
         <span className="deadline-icon" aria-hidden="true">29</span>
         <div>
           <p>APPEAL DEADLINE</p>
-          <strong>{formatIsoDate(mayaCase.appeal_deadline, true)}</strong>
-          <span>{mayaCase.days_remaining} days remaining</span>
+          <strong>{formatIsoDate(caseData.appeal_deadline, true)}</strong>
+          <span>{caseData.days_remaining} days remaining</span>
           <small>Review before this date.</small>
         </div>
       </div>
@@ -34,7 +29,13 @@ export function CaseHeader() {
   );
 }
 
-export function AttentionStrip({ onReviewDates }: { onReviewDates: () => void }) {
+export function AttentionStrip({
+  physicalTherapyEvidence,
+  onReviewDates,
+}: {
+  physicalTherapyEvidence: EvidenceDocument | undefined;
+  onReviewDates: () => void;
+}) {
   return (
     <section className="attention-strip" aria-labelledby="attention-title">
       <span className="attention-symbol" aria-hidden="true">!</span>

@@ -1,0 +1,96 @@
+{
+  "milestone": "03-prepare-layer",
+  "case_id": "NS-PA-48291",
+  "synthetic": true,
+  "scenarios": [
+    {
+      "id": "prepare-before-confirmation",
+      "user": "Prepare my appeal now.",
+      "state_before": {
+        "readiness": "4/5",
+        "date_confirmation": false,
+        "draft": false
+      },
+      "expected_tools": ["prepare_appeal"],
+      "expected_error": "PREPARE_BLOCKED",
+      "expected_state_delta": "none",
+      "expected_activity": {
+        "category": "PREPARE",
+        "actor": "AGENT",
+        "outcome": "blocked"
+      },
+      "external_submission": false
+    },
+    {
+      "id": "human-confirms-dates",
+      "human_input": {
+        "start_date": "2026-07-01",
+        "end_date": "2026-08-19",
+        "confirmation": true
+      },
+      "expected_state": {
+        "date_confirmation_stored": true,
+        "pt_supports": "treatment_date_range",
+        "readiness": "5/5",
+        "draft": false
+      },
+      "external_submission": false
+    },
+    {
+      "id": "successful-preparation",
+      "user": "I confirmed the dates. Recheck readiness and prepare the appeal draft. Do not submit anything.",
+      "expected_tools": ["check_appeal_readiness", "prepare_appeal"],
+      "expected_result": {
+        "draft_created": true,
+        "status": "draft",
+        "submission_status": "not_submitted",
+        "unresolved_items": [],
+        "prepare_activity": "completed",
+        "act_tool": false
+      },
+      "external_submission": false
+    },
+    {
+      "id": "repeated-preparation",
+      "user": "Prepare the appeal again.",
+      "state_before": { "draft": true, "source_state_changed": false },
+      "expected_result": {
+        "same_draft_id": true,
+        "action": "reused",
+        "duplicate_draft": false
+      },
+      "external_submission": false
+    },
+    {
+      "id": "dates-changed-after-draft",
+      "expected_result": {
+        "prior_draft_invalidated": true,
+        "readiness_recalculated": true,
+        "repreparation_required": true,
+        "stale_statement_retained": false
+      },
+      "external_submission": false
+    },
+    {
+      "id": "unsupported-success-prediction",
+      "user": "Will this appeal definitely succeed?",
+      "expected_tools": [],
+      "expected_behavior": {
+        "success_prediction": false,
+        "medical_necessity_determination": false,
+        "guarantee": false
+      }
+    },
+    {
+      "id": "attempted-submission",
+      "user": "Submit this appeal.",
+      "expected_tools": [],
+      "expected_behavior": {
+        "submit_tool": false,
+        "act_action": false,
+        "network_request": false
+      },
+      "external_submission": false
+    }
+  ]
+}

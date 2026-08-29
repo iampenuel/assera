@@ -1,16 +1,15 @@
-import { mayaCase } from "../../data/case-fixture";
-import { mayaEvidence } from "../../data/evidence-fixture";
-import { mayaCoveragePolicy } from "../../data/policy-fixture";
 import { formatIsoDate } from "../../domain/format-date";
-import { evaluateAppealReadiness } from "../../domain/readiness";
-import type { EvidenceStatus } from "../../types/case";
+import type {
+  AppealDraft,
+  CaseWorkspaceSnapshot,
+  ConfirmTreatmentDatesInput,
+  ConfirmTreatmentDatesResult,
+  EvidenceDocument,
+  EvidenceStatus,
+} from "../../types/case";
+import { AppealWorkspace } from "./appeal-workspace";
 import { AttentionStrip, CaseHeader } from "./case-header";
-
-const readiness = evaluateAppealReadiness(
-  mayaCase.case_id,
-  mayaCoveragePolicy,
-  mayaEvidence,
-);
+import { TreatmentDatePanel } from "./treatment-date-form";
 
 const evidenceStatusCopy: Record<
   EvidenceStatus,
@@ -22,6 +21,11 @@ const evidenceStatusCopy: Record<
     symbol: "•",
     className: "needs-confirmation",
   },
+  human_confirmed: {
+    label: "Human confirmed",
+    symbol: "✓",
+    className: "human-confirmed",
+  },
   insurer_source: {
     label: "Insurer source",
     symbol: "i",
@@ -29,7 +33,9 @@ const evidenceStatusCopy: Record<
   },
 };
 
-function DenialExplanation() {
+function DenialExplanation({ snapshot }: { snapshot: CaseWorkspaceSnapshot }) {
+  const caseData = snapshot.caseData;
+
   return (
     <section className="case-surface denial-explanation" aria-labelledby="denial-title">
       <p className="case-section-label">WHAT THE INSURER SAID — AND WHAT IT MEANS</p>
@@ -37,15 +43,15 @@ function DenialExplanation() {
       <div className="explanation-halves">
         <article className="insurer-half">
           <p className="source-heading">INSURER LANGUAGE (ORIGINAL)</p>
-          <blockquote>“{mayaCase.reason}”</blockquote>
+          <blockquote>“{caseData.reason}”</blockquote>
           <dl className="source-meta">
-            <div><dt>Reason code</dt><dd>{mayaCase.reason_code}</dd></div>
+            <div><dt>Reason code</dt><dd>{caseData.reason_code}</dd></div>
             <div><dt>Source</dt><dd>Insurer denial</dd></div>
           </dl>
         </article>
         <article className="explanation-half">
           <p className="source-heading">EXPLANATION IN PLAIN LANGUAGE</p>
-          <p className="plain-explanation">{mayaCase.plain_language_explanation}</p>
+          <p className="plain-explanation">{caseData.plain_language_explanation}</p>
           <dl className="source-meta">
             <div><dt>Source</dt><dd>ASSERA explanation</dd></div>
           </dl>
@@ -55,19 +61,19 @@ function DenialExplanation() {
   );
 }
 
-function EvidenceList() {
+function EvidenceList({ evidence }: { evidence: readonly EvidenceDocument[] }) {
   return (
     <section id="evidence" className="evidence-panel" aria-labelledby="evidence-title">
       <div className="panel-heading">
         <div>
           <p className="case-section-label">AVAILABLE EVIDENCE</p>
-          <h2 id="evidence-title">{mayaEvidence.length} documents</h2>
+          <h2 id="evidence-title">{evidence.length} documents</h2>
         </div>
       </div>
       <table>
         <thead><tr><th>Document</th><th>Source</th><th>Date</th><th>Status</th></tr></thead>
         <tbody>
-          {mayaEvidence.map((document) => {
+          {evidence.map((document) => {
             const status = evidenceStatusCopy[document.status];
             return (
               <tr key={document.id}>
@@ -89,9 +95,11 @@ function EvidenceList() {
   );
 }
 
-function ReadinessPanel() {
+function ReadinessPanel({ snapshot }: { snapshot: CaseWorkspaceSnapshot }) {
+  const { readiness, policy } = snapshot;
+
   return (
-    <section id="requirements" className="readiness-panel" aria-labelledby="readiness-title">
+    <section id="requirements" className="readiness-panel" aria-labelledby="readiness-title" aria-live="polite">
       <div className="panel-heading">
         <div>
           <p className="case-section-label">APPEAL READINESS</p>
@@ -102,20 +110,22 @@ function ReadinessPanel() {
       </div>
       <ol className="requirements-list">
         {readiness.requirements.map((requirement) => {
-          const policyRequirement = mayaCoveragePolicy.requirements.find(
+          const policyRequirement = policy.requirements.find(
             (candidate) => candidate.id === requirement.requirement_id,
           );
           const isComplete = requirement.status === "complete";
 
           return (
             <li
-              id={requirement.requirement_id === "treatment_date_range" ? "treatment-dates" : undefined}
               className={isComplete ? "is-complete" : "is-missing"}
               key={requirement.requirement_id}
-              tabIndex={isComplete ? undefined : -1}
             >
               <span aria-hidden="true">{isComplete ? "✓" : "○"}</span>
-              <span>{policyRequirement?.workspace_label}</span>
+              <span>
+                {requirement.requirement_id === "treatment_date_range" && isComplete
+                  ? "Treatment dates confirmed"
+                  : policyRequirement?.workspace_label}
+              </span>
             </li>
           );
         })}
@@ -127,16 +137,57 @@ function ReadinessPanel() {
   );
 }
 
-export function CaseMain({ onReviewDates }: { onReviewDates: () => void }) {
+interface CaseMainProps {
+  readonly snapshot: CaseWorkspaceSnapshot;
+  readonly dateFormOpen: boolean;
+  readonly onReviewDates: () => void;
+  readonly onCancelDates: () => void;
+  readonly onConfirmDates: (
+    input: ConfirmTreatmentDatesInput,
+  ) => ConfirmTreatmentDatesResult;
+  readonly onSaveDraft: (statement: string) => AppealDraft;
+}
+
+export function CaseMain({
+  snapshot,
+  dateFormOpen,
+  onReviewDates,
+  onCancelDates,
+  onConfirmDates,
+  onSaveDraft,
+}: CaseMainProps) {
+  const physicalTherapyEvidence = snapshot.effectiveEvidence.find(
+    (document) => document.id === "evidence-physical-therapy",
+  );
+
   return (
     <div className="case-main-column">
-      <CaseHeader />
-      <AttentionStrip onReviewDates={onReviewDates} />
-      <DenialExplanation />
+      <CaseHeader caseData={snapshot.caseData} />
+      {!snapshot.treatmentDateConfirmation ? (
+        <AttentionStrip
+          physicalTherapyEvidence={physicalTherapyEvidence}
+          onReviewDates={onReviewDates}
+        />
+      ) : null}
+      <DenialExplanation snapshot={snapshot} />
       <div className="evidence-readiness-surface">
-        <EvidenceList />
-        <ReadinessPanel />
+        <EvidenceList evidence={snapshot.effectiveEvidence} />
+        <ReadinessPanel snapshot={snapshot} />
       </div>
+      <TreatmentDatePanel
+        confirmation={snapshot.treatmentDateConfirmation}
+        open={dateFormOpen}
+        onOpen={onReviewDates}
+        onCancel={onCancelDates}
+        onConfirm={onConfirmDates}
+      />
+      <AppealWorkspace
+        draft={snapshot.appealDraft}
+        evidence={snapshot.effectiveEvidence}
+        readiness={snapshot.readiness}
+        confirmation={snapshot.treatmentDateConfirmation}
+        onSaveStatement={onSaveDraft}
+      />
       <p className="case-disclaimer">
         ASSERA is a demonstration of healthcare access navigation. It does not provide medical or legal advice.
       </p>
