@@ -554,7 +554,7 @@ button { cursor: pointer; }
 .evidence-status { width: fit-content; padding: 5px 7px; display: inline-flex; align-items: center; gap: 5px; border-radius: 7px; white-space: nowrap; font-size: 10px; font-weight: 620; }
 .evidence-status span { font-weight: 850; }
 .evidence-status.verified { background: #e8f0ea; color: var(--verified); }
-.evidence-status.dates-incomplete { background: #fbefd9; color: var(--attention); }
+.evidence-status.dates-incomplete, .evidence-status.needs-confirmation { background: #fbefd9; color: var(--attention); }
 .evidence-status.insurer-source { background: #e9edf3; color: #465b73; }
 .requirements-list { margin: 0; padding: 0; display: grid; gap: 2px; list-style: none; }
 .requirements-list li { min-height: 38px; padding: 8px 5px; display: grid; grid-template-columns: 24px 1fr; align-items: center; gap: 8px; border-radius: 7px; font-size: 12px; line-height: 1.4; }

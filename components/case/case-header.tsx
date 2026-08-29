@@ -1,4 +1,10 @@
 import { mayaCase } from "../../data/case-fixture";
+import { mayaEvidence } from "../../data/evidence-fixture";
+import { formatIsoDate } from "../../domain/format-date";
+
+const physicalTherapyEvidence = mayaEvidence.find(
+  (document) => document.id === "evidence-physical-therapy",
+);
 
 export function CaseHeader() {
   return (
@@ -12,14 +18,14 @@ export function CaseHeader() {
         <p className="case-payer">{mayaCase.payer}</p>
         <p className="request-meta">
           Requested by {mayaCase.requested_by} <span aria-hidden="true">•</span>{" "}
-          Requested on {mayaCase.requested_date}
+          Requested on {formatIsoDate(mayaCase.requested_date, true)}
         </p>
       </div>
       <div className="deadline-panel">
         <span className="deadline-icon" aria-hidden="true">29</span>
         <div>
           <p>APPEAL DEADLINE</p>
-          <strong>October 29, 2026</strong>
+          <strong>{formatIsoDate(mayaCase.appeal_deadline, true)}</strong>
           <span>{mayaCase.days_remaining} days remaining</span>
           <small>Review before this date.</small>
         </div>
@@ -34,7 +40,10 @@ export function AttentionStrip({ onReviewDates }: { onReviewDates: () => void })
       <span className="attention-symbol" aria-hidden="true">!</span>
       <div>
         <h2 id="attention-title">One item needs your confirmation</h2>
-        <p>We found records showing 7 weeks of physical therapy. Please confirm the start and end dates.</p>
+        <p>
+          We found records showing {physicalTherapyEvidence?.facts?.conservative_treatment_weeks ?? 7} weeks of
+          physical therapy. Please confirm the start and end dates.
+        </p>
       </div>
       <button type="button" onClick={onReviewDates}>Review dates <span aria-hidden="true">→</span></button>
     </section>

@@ -1,5 +1,33 @@
 import { mayaCase } from "../../data/case-fixture";
+import { mayaEvidence } from "../../data/evidence-fixture";
+import { mayaCoveragePolicy } from "../../data/policy-fixture";
+import { formatIsoDate } from "../../domain/format-date";
+import { evaluateAppealReadiness } from "../../domain/readiness";
+import type { EvidenceStatus } from "../../types/case";
 import { AttentionStrip, CaseHeader } from "./case-header";
+
+const readiness = evaluateAppealReadiness(
+  mayaCase.case_id,
+  mayaCoveragePolicy,
+  mayaEvidence,
+);
+
+const evidenceStatusCopy: Record<
+  EvidenceStatus,
+  { label: string; symbol: string; className: string }
+> = {
+  verified: { label: "Verified", symbol: "✓", className: "verified" },
+  needs_confirmation: {
+    label: "Needs confirmation",
+    symbol: "•",
+    className: "needs-confirmation",
+  },
+  insurer_source: {
+    label: "Insurer source",
+    symbol: "i",
+    className: "insurer-source",
+  },
+};
 
 function DenialExplanation() {
   return (
@@ -31,24 +59,30 @@ function EvidenceList() {
   return (
     <section id="evidence" className="evidence-panel" aria-labelledby="evidence-title">
       <div className="panel-heading">
-        <div><p className="case-section-label">EVIDENCE WE HAVE</p><h2 id="evidence-title">4 documents</h2></div>
+        <div>
+          <p className="case-section-label">AVAILABLE EVIDENCE</p>
+          <h2 id="evidence-title">{mayaEvidence.length} documents</h2>
+        </div>
       </div>
       <table>
         <thead><tr><th>Document</th><th>Source</th><th>Date</th><th>Status</th></tr></thead>
         <tbody>
-          {mayaCase.evidence.map((document) => (
-            <tr key={document.id}>
-              <th scope="row" data-label="Document">{document.title}</th>
-              <td data-label="Source">{document.source}</td>
-              <td data-label="Date">{document.date}</td>
-              <td data-label="Status">
-                <span className={`evidence-status ${document.status.toLowerCase().replace(" ", "-")}`}>
-                  <span aria-hidden="true">{document.status === "Verified" ? "✓" : document.status === "Dates incomplete" ? "•" : "i"}</span>
-                  {document.status}
-                </span>
-              </td>
-            </tr>
-          ))}
+          {mayaEvidence.map((document) => {
+            const status = evidenceStatusCopy[document.status];
+            return (
+              <tr key={document.id}>
+                <th scope="row" data-label="Document">{document.name}</th>
+                <td data-label="Source">{document.source}</td>
+                <td data-label="Date">{formatIsoDate(document.document_date)}</td>
+                <td data-label="Status">
+                  <span className={`evidence-status ${status.className}`}>
+                    <span aria-hidden="true">{status.symbol}</span>
+                    {status.label}
+                  </span>
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </section>
@@ -59,22 +93,36 @@ function ReadinessPanel() {
   return (
     <section id="requirements" className="readiness-panel" aria-labelledby="readiness-title">
       <div className="panel-heading">
-        <div><p className="case-section-label">APPEAL READINESS</p><h2 id="readiness-title">4 of 5 requirements complete</h2></div>
+        <div>
+          <p className="case-section-label">APPEAL READINESS</p>
+          <h2 id="readiness-title">
+            {readiness.summary.complete} of {readiness.summary.total} requirements complete
+          </h2>
+        </div>
       </div>
       <ol className="requirements-list">
-        {mayaCase.readiness.map((requirement) => (
-          <li
-            id={requirement.id === "treatment-dates" ? "treatment-dates" : undefined}
-            className={requirement.complete ? "is-complete" : "is-missing"}
-            key={requirement.id}
-            tabIndex={requirement.complete ? undefined : -1}
-          >
-            <span aria-hidden="true">{requirement.complete ? "✓" : "○"}</span>
-            <span>{requirement.label}</span>
-          </li>
-        ))}
+        {readiness.requirements.map((requirement) => {
+          const policyRequirement = mayaCoveragePolicy.requirements.find(
+            (candidate) => candidate.id === requirement.requirement_id,
+          );
+          const isComplete = requirement.status === "complete";
+
+          return (
+            <li
+              id={requirement.requirement_id === "treatment_date_range" ? "treatment-dates" : undefined}
+              className={isComplete ? "is-complete" : "is-missing"}
+              key={requirement.requirement_id}
+              tabIndex={isComplete ? undefined : -1}
+            >
+              <span aria-hidden="true">{isComplete ? "✓" : "○"}</span>
+              <span>{policyRequirement?.workspace_label}</span>
+            </li>
+          );
+        })}
       </ol>
-      <p className="requirements-note">Requirements based on payer policy and plan rules.</p>
+      <p className="requirements-note">
+        Administrative requirements from a fictional Northstar Health policy used for this synthetic demonstration.
+      </p>
     </section>
   );
 }

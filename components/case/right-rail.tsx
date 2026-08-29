@@ -4,7 +4,7 @@ const statusCopy: Record<WebMCPStatus, { label: string; className: string; detai
   checking: { label: "Connecting", className: "checking" },
   available: { label: "Active", className: "active" },
   unavailable: { label: "Preview mode", className: "preview", detail: "WebMCP is not available in this browser." },
-  error: { label: "Unavailable", className: "unavailable", detail: "The read tool could not connect. No case information was affected." },
+  error: { label: "Unavailable", className: "unavailable", detail: "The read tools could not connect. No case information was affected." },
 };
 
 function formatActivityTime(occurredAt: string): string {
@@ -16,7 +16,7 @@ function NextSafeStep({ onReviewDates }: { onReviewDates: () => void }) {
     <section id="next-safe-step" className="rail-card next-step-card" aria-labelledby="next-step-title">
       <p className="case-section-label">NEXT SAFE STEP</p>
       <h2 id="next-step-title">Confirm treatment dates</h2>
-      <p>Confirm the start and end dates of your physical therapy so ASSERA can complete your appeal package.</p>
+      <p>Confirm the start and end dates of your physical therapy so the case workspace has the information needed before appeal preparation.</p>
       <button type="button" onClick={onReviewDates}>Review &amp; confirm dates <span aria-hidden="true">→</span></button>
     </section>
   );
@@ -29,16 +29,16 @@ function AgentPermissions({ status }: { status: WebMCPStatus }) {
       <p id="permissions-title" className="case-section-label">AGENT ACCESS &amp; PERMISSIONS</p>
       <dl>
         <div>
-          <dt>READ</dt><dd>Your agent can read case information.</dd>
+          <dt>READ</dt><dd>Your agent can read denial details, coverage requirements, available evidence, and readiness.</dd>
           <span className={`permission-status ${readStatus.className}`}>{readStatus.label}</span>
         </div>
         <div>
-          <dt>PREPARE</dt><dd>Your agent can prepare documents.</dd>
-          <span className="permission-status neutral">Not used</span>
+          <dt>PREPARE</dt><dd>No appeal-preparation tool is available in this milestone.</dd>
+          <span className="permission-status neutral">Not yet available</span>
         </div>
         <div>
-          <dt>ACT</dt><dd>Consequential actions require your approval.</dd>
-          <span className="permission-status neutral">Approval required</span>
+          <dt>ACT</dt><dd>No submission tool is available; future consequential actions require your approval.</dd>
+          <span className="permission-status neutral">Not yet available</span>
         </div>
       </dl>
       {readStatus.detail ? <p className="permission-detail">{readStatus.detail}</p> : null}

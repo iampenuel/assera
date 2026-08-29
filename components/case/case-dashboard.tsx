@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import type { AgentActivity, WebMCPStatus } from "../../types/case";
-import { registerDenialDetailsTool } from "../../webmcp/denial-tools";
+import { registerCaseTools } from "../../webmcp/register-case-tools";
 import { AsseraLogo } from "../brand/assera-logo";
 import { CaseMain } from "./case-main";
 import { RightRail } from "./right-rail";
@@ -16,16 +16,19 @@ export function CaseDashboard() {
     let active = true;
     let unregister: (() => void) | undefined;
 
-    void registerDenialDetailsTool({
-      onAccess: (occurredAt) => {
+    void registerCaseTools({
+      onActivity: (event) => {
         if (!active) return;
-        setActivities((current) => [{
-          id: `denial-read-${occurredAt}-${current.length}`,
-          title: "Denial details accessed",
-          category: "READ",
-          impact: "No information changed",
-          occurredAt,
-        }, ...current]);
+        setActivities((current) => [
+          ...current,
+          {
+            id: `${event.toolName}-${event.occurredAt}-${current.length}`,
+            title: event.title,
+            category: event.category,
+            impact: event.impact,
+            occurredAt: event.occurredAt,
+          },
+        ]);
       },
       onStatusChange: (status) => {
         if (active) setWebMCPStatus(status);

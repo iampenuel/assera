@@ -1,15 +1,29 @@
 import { AsseraLogo } from "../brand/assera-logo";
+import { mayaCase } from "../../data/case-fixture";
+import { mayaEvidence } from "../../data/evidence-fixture";
+import { mayaCoveragePolicy } from "../../data/policy-fixture";
+import { evaluateAppealReadiness } from "../../domain/readiness";
 
 interface CaseNavigationProps {
   activityCount: number;
   mobile?: boolean;
 }
 
+const readiness = evaluateAppealReadiness(
+  mayaCase.case_id,
+  mayaCoveragePolicy,
+  mayaEvidence,
+);
+
 const baseItems = [
   { href: "#overview", label: "Overview" },
-  { href: "#evidence", label: "Evidence", badge: "4" },
-  { href: "#requirements", label: "Requirements", badge: "4/5" },
-  { href: "#next-safe-step", label: "Appeal package" },
+  { href: "#evidence", label: "Evidence", badge: String(mayaEvidence.length) },
+  {
+    href: "#requirements",
+    label: "Requirements",
+    badge: `${readiness.summary.complete}/${readiness.summary.total}`,
+  },
+  { href: "#next-safe-step", label: "Next safe step" },
 ] as const;
 
 export function CaseNavigation({ activityCount, mobile = false }: CaseNavigationProps) {

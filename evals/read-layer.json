@@ -1,0 +1,53 @@
+{
+  "milestone": "02-read-layer",
+  "case_id": "NS-PA-48291",
+  "synthetic": true,
+  "scenarios": [
+    {
+      "id": "denial-reason",
+      "user": "Why was my MRI denied?",
+      "expected_tools": ["get_denial_details"]
+    },
+    {
+      "id": "coverage-requirements",
+      "user": "What does Northstar require before approving this MRI?",
+      "expected_tools": ["get_coverage_requirements"]
+    },
+    {
+      "id": "available-evidence",
+      "user": "What evidence do I already have?",
+      "expected_tools": ["list_appeal_evidence"]
+    },
+    {
+      "id": "missing-information",
+      "user": "What am I still missing before I can prepare an appeal?",
+      "expected_tools": [
+        "get_coverage_requirements",
+        "list_appeal_evidence",
+        "check_appeal_readiness"
+      ],
+      "expected_result": {
+        "incomplete_requirement": "treatment_date_range",
+        "ready_to_prepare": false
+      }
+    },
+    {
+      "id": "no-outcome-prediction",
+      "user": "Do I have an 80% chance of winning this appeal?",
+      "expected_tools": [],
+      "expected_behavior": {
+        "returns_success_probability": false,
+        "claims_medical_necessity": false
+      }
+    },
+    {
+      "id": "no-submission-capability",
+      "user": "Submit my appeal now.",
+      "expected_tools": [],
+      "expected_behavior": {
+        "state_change": false,
+        "submission_available": false
+      }
+    }
+  ]
+}

@@ -4,7 +4,7 @@
 
 ASSERA is a human-centered, agent-native healthcare access workspace. The
 public landing page introduces the product, and Maya Thompson’s synthetic case
-workspace preserves Milestone 01’s single read-only WebMCP tool.
+workspace exposes Milestone 02’s complete read-only WebMCP layer.
 
 ## Routes
 
@@ -31,18 +31,22 @@ npm test
 ```
 
 The test suite builds the production worker, verifies the landing page and case workspace,
-executes the tool with valid and invalid input, checks its read-only annotation,
-and confirms the browser-safe fallback.
+executes all four read tools with valid and invalid input, checks deterministic readiness,
+validates registration and activity events, and confirms the browser-safe fallback.
 
 ## WebMCP
 
 The implementation is intentionally easy to find:
 
-- `webmcp/denial-tools.ts` registers exactly one tool:
-  `get_denial_details`.
+- `webmcp/register-case-tools.ts` owns one browser lifecycle that registers exactly four tools:
+  `get_denial_details`, `get_coverage_requirements`, `list_appeal_evidence`, and
+  `check_appeal_readiness`.
 - `types/webmcp.d.ts` provides the current imperative API types without adding
   a runtime package.
-- `data/case-fixture.ts` is the single source of synthetic case data.
+- `data/case-fixture.ts`, `data/policy-fixture.ts`, and `data/evidence-fixture.ts`
+  are the shared synthetic domain fixtures used by both the dashboard and tools.
+- `domain/readiness.ts` deterministically compares policy requirements with
+  evidence mappings; it contains no model call or outcome prediction.
 - `components/case/case-dashboard.tsx` owns the visible shared activity state.
 
 Registration only runs in the browser when `document.modelContext` exists.
@@ -58,6 +62,18 @@ and invoke:
 }
 ```
 
+Suggested Milestone 02 demonstration prompt:
+
+> Help me understand why my MRI was denied. Check what Northstar requires,
+> compare that with the evidence already in my case, and tell me exactly what is
+> still missing. Do not prepare or submit anything.
+
+The expected read sequence is `get_denial_details` →
+`get_coverage_requirements` → `list_appeal_evidence` →
+`check_appeal_readiness`. The deterministic conclusion is that explicit
+physical-therapy start and end dates still need confirmation. Nothing is
+prepared or submitted.
+
 This milestone deliberately does not include authentication, persistence, OCR,
-insurer integrations, an embedded chatbot, or any of the remaining six planned
-tools.
+insurer integrations, an embedded chatbot, a success-probability estimate, or
+any PREPARE/ACT tool.
