@@ -77,7 +77,7 @@ button { cursor: pointer; }
 .hero-photo {
   z-index: -3;
   object-fit: cover;
-  object-position: 48% center;
+  object-position: 48% 40%;
 }
 .hero-shade {
   z-index: -2;
@@ -176,7 +176,7 @@ button { cursor: pointer; }
   font-size: 16px;
   line-height: 1.52;
 }
-.hero-actions { margin-top: 26px; display: flex; align-items: flex-start; flex-direction: column; gap: 16px; }
+.hero-actions { margin-top: 26px; display: flex; align-items: center; flex-direction: row; gap: 28px; }
 .hero-primary-action {
   min-height: 50px;
   padding: 0 20px;
@@ -658,7 +658,7 @@ button { cursor: pointer; }
   .hero-eyebrow { margin-bottom: 13px; font-size: 11px; letter-spacing: .12em; }
   .hero-copy h1 { font-size: clamp(40px, 7.4vw, 52px); line-height: .98; }
   .hero-body { max-width: 355px; margin-top: 15px; font-size: 14px; line-height: 1.48; }
-  .hero-actions { margin-top: 20px; gap: 16px; }
+  .hero-actions { margin-top: 20px; align-items: flex-start; flex-direction: column; gap: 16px; }
   .hero-primary-action { min-height: 47px; padding: 0 15px; gap: 15px; font-size: 14px; }
   .hero-secondary-action { min-height: 30px; padding-bottom: 5px; font-size: 13px; }
   .hero-principles { padding-top: 18px; }
