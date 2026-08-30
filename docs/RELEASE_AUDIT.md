@@ -118,8 +118,8 @@ authorizes the access/visibility changes and post-change smoke tests pass.
 | Complete test suite | PASS — 33/33 |
 | Final production build | PASS — completed once inside `npm test` |
 | Local production preview | PASS — 1600, 1024, and 390 widths; clean console; exactly seven tools |
-| Clean-clone verification | Pending release commit |
-| Private Sites candidate | Pending release commit and clean-clone gate |
+| Clean-clone verification | PASS — fresh Node 22 install, TypeScript, lint, production build, and 33/33 tests at release commit `5089239` |
+| Private Sites candidate | Planned next from the validated release commit; deployment outcome belongs in the final run report |
 
 ## Release decision
 
