@@ -196,7 +196,7 @@ const caseToolDefinitions: readonly CaseToolDefinition[] = [
     name: SUBMIT_APPEAL_TOOL_NAME,
     title: "Submit appeal in simulation",
     description:
-      "Use this state-changing tool to record a simulated submission of the exact current ASSERA appeal package after Maya has approved that same package version. Provide the package and approval identifiers returned by preview_appeal. The tool sends nothing to a real insurer.",
+      "Use this state-changing tool to record a simulated submission of the exact current ASSERA appeal package after Maya has approved that same package version. Copy package_id and package_version from preview_appeal, and copy the human approval reference from preview_appeal.approval.approval_id. The tool sends nothing to a real insurer.",
     annotations: {
       readOnlyHint: false,
       untrustedContentHint: false,

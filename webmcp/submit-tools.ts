@@ -32,7 +32,8 @@ export function createSubmitAppealInputSchema(caseId: string) {
         type: "string",
         minLength: 1,
         maxLength: 200,
-        description: "The matching human approval identifier returned by preview_appeal.",
+        description:
+          "The matching human approval identifier returned at preview_appeal.approval.approval_id.",
       },
       mode: {
         type: "string",

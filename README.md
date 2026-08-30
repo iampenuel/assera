@@ -1,130 +1,170 @@
+<p align="center">
+  <img src="public/brand/assera-mark-espresso.png" alt="ASSERA" width="96" />
+</p>
+
 # ASSERA
 
-**A denial isn’t the final word.**
+> **A denial isn’t the final word.**
 
-ASSERA is a human-centered, agent-native healthcare access workspace. The
-public landing page introduces the product, and Maya Thompson’s synthetic case
-demonstrates Milestone 05’s READ + PREPARE + human CONTROL + simulated ACT
-boundary.
+ASSERA is a human-centered, browser-native WebMCP workspace that helps a person
+understand a synthetic prior-authorization denial, identify missing
+administrative information, prepare an exact package, retain human approval,
+and record a simulated—not real—submission.
 
-Milestone 05 records a local, immutable simulation receipt only. It never
-contacts a real insurer, sends email, uploads files, or makes a
-submission-related network request.
+- **Live demo:** [owner review candidate](https://assera-webmcp.stanleyzebulonp.chatgpt.site) — public judge access is pending owner authorization.
+- **Demo video:** `PUBLIC_YOUTUBE_URL_PENDING`
+- **Direct synthetic case:** `/case/NS-PA-48291`
 
-## Routes
+## Why this problem matters
 
-- `/` — public ASSERA landing page
-- `/case/NS-PA-48291` — Maya Thompson’s synthetic case workspace
-- `/case` — redirects to Maya’s case workspace
+KFF’s analysis of 2024 Medicare Advantage data reports nearly 53 million prior
+authorization determinations, 4.1 million fully or partially denied requests,
+an 11.5% appeal rate among denied requests, and an 80.7% partial/full overturn
+rate among appealed denials. Those figures describe Medicare Advantage—not all
+U.S. insurance—and an overturn does not prove the initial decision was improper.
+See [verified sources](docs/SOURCES.md).
 
-## Run and verify
+## People and agents work together
 
-Node.js 22.13 or newer is required.
+The agent can READ denial/policy/evidence/readiness, PREPARE a deterministic
+local draft, inspect the exact package, and record simulated ACT only after the
+human approves that package in ASSERA. Maya alone confirms treatment dates,
+edits the statement, approves/revokes a package, and authorizes the exact
+version. **ASSERA assists. Maya authorizes.**
+
+WebMCP is essential because the website itself exposes current, structured,
+state-aware tools. ChatGPT orchestrates conversation; ASSERA remains the source
+of truth for evidence, deterministic rules, guarded mutation, provenance, and
+visible activity.
+
+## Demonstration journey
+
+1. Ask why the MRI was denied and what is missing: readiness is 4/5.
+2. Ask to prepare too early: `PREPARE_BLOCKED`, no invented dates or draft.
+3. Maya confirms July 1–August 19, 2026 in the UI: readiness becomes 5/5.
+4. The agent prepares a deterministic local draft; nothing is submitted.
+5. The agent previews the exact statement, four documents, shared information,
+   package/version, approval, and submission status.
+6. Maya approves the exact package version in ASSERA.
+7. The agent passes only current references to simulation-only ACT, producing
+   one immutable receipt. No real insurer is contacted.
+
+Refresh resets the ephemeral synthetic workspace.
+
+## Architecture
+
+```mermaid
+flowchart LR
+  Maya -->|human controls| UI[ASSERA React UI]
+  Agent[ChatGPT agent] -->|7 WebMCP tools| WM[WebMCP layer]
+  UI --> State[Reducer-owned workspace]
+  WM --> State
+  Fixtures[Synthetic fixtures] --> Domain[Deterministic domain logic]
+  Domain --> State
+  State --> Package[Exact package + version]
+  Maya -->|approval| Package
+  Package -->|reference-only simulation| Receipt[Immutable simulated receipt]
+  Receipt -. no network .-> NoPayer[No real insurer]
+```
+
+See [WebMCP architecture](docs/WEBMCP_ARCHITECTURE.md) and the
+[threat model](docs/THREAT_MODEL.md).
+
+## Seven WebMCP tools
+
+| Tool | Class | Contract |
+|---|---|---|
+| `get_denial_details` | READ | Decision, reason, deadline |
+| `get_coverage_requirements` | READ | Fictional administrative criteria; no medical judgment |
+| `list_appeal_evidence` | READ | Structured available evidence |
+| `check_appeal_readiness` | READ | Deterministic complete/incomplete comparison |
+| `preview_appeal` | READ | Exact untrusted package content and status |
+| `prepare_appeal` | PREPARE | Create/reuse local draft or return truthful block |
+| `submit_appeal` | ACT | Exact reference-only simulation after human approval |
+
+There is no WebMCP tool to confirm dates, edit, approve, revoke, replace package
+content, contact a real payer, cancel, or resubmit.
+
+## Safety boundary
+
+- one fictional case and fictional insurer/policy/providers;
+- no uploaded record, PHI, real identifier, or real payer connection;
+- strict schemas with no extra ACT properties;
+- exact case/package/version/approval binding;
+- human-only approval with UI provenance;
+- one idempotent, concurrency-safe, immutable simulated receipt;
+- execution cancellation before commit;
+- prompt/XSS-shaped statement content rendered as inert text;
+- no medical/legal advice, medical-necessity decision, or success prediction;
+- no claim of HIPAA compliance or production readiness.
+
+## Local setup
+
+Node.js 22.13+ is required; release validation used 22.23.1.
 
 ```bash
-npm install
+npm ci
 npm run dev
-npx tsc --noEmit
+```
+
+Then open `http://localhost:3000` (or the port printed by the dev server).
+
+Validation:
+
+```bash
+npx tsc --noEmit --incremental false
 npm run lint
 npm test
 npm run build
 ```
 
-## Milestone 05 architecture
+## WebMCP testing
 
-- `domain/case-workspace.ts` is the single mutation boundary. Its synchronous
-  live-state adapter makes first submission, rapid retry, and concurrent calls
-  observe one authoritative in-memory record.
-- `domain/simulated-payer.ts` contains pure reference validation and receipt
-  construction. It performs no I/O, content interpretation, model call, payer
-  call, or state mutation.
-- `domain/appeal-package.ts` builds the exact current review snapshot and, after
-  finalization, returns the stored submitted snapshot with concise receipt
-  metadata.
-- `CaseWorkspaceToolAdapter` exposes READ, PREPARE, preview, and one simulated
-  ACT command. It still cannot confirm dates, edit content, approve, or revoke.
-- `CaseWorkspaceUiActions` retains Maya’s human-only approval authority and
-  exposes the same authoritative submission command as a browser fallback.
-- The submission command checks its execution `AbortSignal` before commit,
-  atomically stores the submission and ACT activity, and returns the same
-  object rendered by the receipt UI.
+Use ChatGPT’s in-app browser where WebMCP is supported. In compatible Chrome,
+use the challenge-required WebMCP version/flag/extension setup. Open the case
+route, verify exactly seven tools, and follow the [judge testing instructions](submission/TESTING_INSTRUCTIONS.md).
 
-### Approval and reference binding
+The UI remains functional when `document.modelContext` is unavailable; the
+human fallback uses the same domain command and still records only a simulation.
 
-Maya’s UI creates one stable `AppealApproval.id`. Approval binds the exact case,
-draft ID/version, package ID/version, actor, UI origin, and simulated scope.
-`submit_appeal` accepts references only:
+## Evals and release evidence
 
-```json
-{
-  "case_id": "NS-PA-48291",
-  "package_id": "…",
-  "package_version": "…",
-  "approval_id": "…",
-  "mode": "simulation"
-}
-```
+Deterministic tests cover READ/PREPARE/CONTROL/ACT contracts, all adversarial
+reference failures, extra ACT properties, prompt injection, idempotency,
+concurrency, cancellation, finalization, fallback, no-network behavior, and
+rendered routes. Live IAB results currently record 45 rows: 37 PASS, 3 FAIL,
+5 NOT_RUN. The original ACT argument failure remains recorded, and one
+authorized post-fix ACT journey passed; Chrome remains an explicit gap. See
+[evaluation details](docs/EVALUATIONS.md) and
+[`live-agent-results.json`](evals/live-agent-results.json).
 
-It cannot accept or change the statement, documents, dates, medical
-information, notes, or approval. Mismatched or stale references fail with a
-typed domain error and truthful blocked ACT activity.
+<p>
+  <img src="artifacts/release-candidate/landing-desktop-1600x900-local-final.jpg" alt="ASSERA landing page" width="49%" />
+  <img src="artifacts/release-candidate/live-postfix-simulated-receipt-local.png" alt="ASSERA simulated receipt" width="49%" />
+</p>
 
-### Receipt, idempotency, and finalization
+## Repository map
 
-The first valid call generates exactly one `submission-…` ID and one visibly
-synthetic `SIM-…` confirmation number. Exact retries return `action: "reused"`
-with the same stored receipt. Rapid/concurrent calls cannot create a second
-submission.
+- `app/`, `components/` — pages and human UI
+- `data/` — immutable synthetic fixtures
+- `domain/` — deterministic state and safety rules
+- `webmcp/` — seven page-defined tool contracts and registration
+- `tests/`, `evals/` — deterministic and live evaluation evidence
+- `docs/` — architecture, security, release, access, and QA audits
+- `submission/` — Devpost copy, script, shot list, testing, and checklist
+- `artifacts/release-candidate/` — curated visual evidence
 
-After submission, the approved package snapshot, draft, dates, approval, and
-receipt are immutable. Date changes, draft edits, preparation, reapproval, and
-revocation fail with `SUBMISSION_FINALIZED`. Refresh intentionally starts a new
-ephemeral synthetic workspace.
+## Known limitations
 
-## WebMCP tool inventory
+One synthetic case; ephemeral in-memory state; no ASSERA-owned production auth,
+database, real insurer integration, clinical validation, or public access yet.
+Chrome remains unobserved in this environment. Public Sites and repository
+visibility are explicit owner-controlled release gates.
 
-Exactly seven tools are registered through one browser lifecycle and one
-registration `AbortSignal`:
+## License and author
 
-1. `get_denial_details` — READ
-2. `get_coverage_requirements` — READ
-3. `list_appeal_evidence` — READ
-4. `check_appeal_readiness` — READ
-5. `preview_appeal` — READ
-6. `prepare_appeal` — PREPARE
-7. `submit_appeal` — ACT (simulation only)
+Software source is licensed under [Apache-2.0](LICENSE). The ASSERA name,
+wordmark, and logo remain brand identifiers; see [NOTICE](NOTICE). Third-party
+dependencies keep their own licenses.
 
-No WebMCP tool can approve, revoke, edit, cancel, resubmit, upload, or fabricate
-human authority. `preview_appeal` remains the only read path for approval and
-submission status. `submit_appeal` returns compact receipt metadata and not the
-appeal statement.
-
-Without `document.modelContext`, the case UI remains functional. Maya can
-review and approve the exact package and choose **Run simulated submission**;
-that fallback uses the same command and produces a HUMAN / ASSERA_UI receipt.
-
-## Manual demonstration
-
-1. Confirm physical therapy from July 1 through August 19, 2026; readiness
-   becomes 5/5.
-2. Prepare the local appeal draft and preview the exact package.
-3. In ASSERA, review the package, check the version-specific statement, and
-   choose **Approve this package**. The activity log records HUMAN / CONTROL.
-4. Ask the agent to preview again and pass the returned case, package, version,
-   and approval references to `submit_appeal` with `mode: "simulation"`.
-5. Confirm the main column and right rail show **SIMULATION COMPLETE**, the
-   `SIM-…` receipt, no real insurer contacted, and no external network request.
-6. Repeat the exact call; it returns the existing receipt without creating a
-   duplicate. Try an edit or revocation; the finalized workspace rejects it.
-
-## Tests and evals
-
-The suite covers the original READ/PREPARE/CONTROL contracts plus approval IDs,
-strict reference-only schema, every submission error, agent and human paths,
-idempotent/concurrent calls, pre-commit cancellation, finalization,
-submitted-preview behavior, UI integration, and the 14 scenarios in
-`evals/act-layer.json`.
-
-All case, payer, policy, evidence, approval, submission, and receipt data are
-synthetic. ASSERA does not provide medical or legal advice and does not predict
-appeal success or payer outcome.
+Created by **Penuel Stanley-Zebulon** for the 2026 WebMCP Challenge.

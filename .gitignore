@@ -38,5 +38,7 @@ yarn-error.log*
 /.wrangler/
 /outputs/
 /work/
-/artifacts/
+/artifacts/*
+!/artifacts/release-candidate/
+!/artifacts/release-candidate/**
 *.tsbuildinfo

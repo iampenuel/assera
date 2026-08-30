@@ -1,0 +1,24 @@
+ASSERA WebMCP inventory — authentic observation from private Sites version 9
+Observed: 2026-08-29 in ChatGPT's in-app browser
+Route: /case/NS-PA-48291
+
+1. get_denial_details — READ
+2. get_coverage_requirements — READ
+3. list_appeal_evidence — READ
+4. check_appeal_readiness — READ
+5. preview_appeal — READ; untrustedContentHint true
+6. prepare_appeal — PREPARE
+7. submit_appeal — ACT; simulation only
+
+Every schema used additionalProperties false. The first six tools required only
+case_id. submit_appeal required exactly case_id, package_id, package_version,
+approval_id, and mode; mode was the constant "simulation".
+
+No approval, revocation, edit, real submission, cancellation, or resubmission
+tool was present.
+
+Capture limitation: the browser notification was exposed as structured text,
+not as a screenshot-capable page element. Before final Devpost submission,
+manually capture the seven-tool notification in an eligible browser after the
+release-candidate deployment and replace/supplement this text only with an
+authentic capture. Do not use the prior six-tool image.

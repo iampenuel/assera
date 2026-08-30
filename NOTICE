@@ -1,0 +1,11 @@
+ASSERA
+Copyright 2026 Penuel Stanley-Zebulon
+
+The ASSERA software source is licensed under the Apache License, Version 2.0.
+The ASSERA name, wordmark, and logo are brand identifiers. The software license
+does not grant trademark rights or permission to imply endorsement. No claim of
+registered trademark status or formal legal clearance is made.
+
+Third-party and open-source dependencies retain their respective licenses and
+notices. See package-lock.json and docs/DEPENDENCY_REVIEW.md for the reviewed
+dependency inventory and scope.
