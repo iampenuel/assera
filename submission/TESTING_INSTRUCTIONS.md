@@ -1,7 +1,7 @@
 # Judge testing instructions
 
-- Public landing: `PUBLIC_LIVE_URL_PENDING`
-- Direct case: `PUBLIC_LIVE_URL_PENDING/case/NS-PA-48291`
+- Public landing: https://assera-webmcp.stanleyzebulonp.chatgpt.site/
+- Direct case: https://assera-webmcp.stanleyzebulonp.chatgpt.site/case/NS-PA-48291
 - Repository: `PUBLIC_REPOSITORY_URL_PENDING`
 
 Preferred environment: ChatGPT in-app browser with WebMCP support. Compatible
@@ -32,6 +32,5 @@ Refresh resets the temporary workspace. Everything is synthetic. ASSERA does
 not contact an insurer, provide medical/legal advice, determine medical
 necessity, or predict appeal success.
 
-Fallback credentials: `NOT APPLICABLE IF PUBLICATION GATE PASSES`. If public
-sharing is unavailable, Devpost instructions must be updated with an approved,
-free judge-access method before submission.
+No credentials or owner session are required for the public landing or case
+workspace.

@@ -23,9 +23,9 @@ Two real findings were identified:
    breakpoints and the approved art direction are unchanged. A production
    preview recheck measured `innerWidth: 1024` and `scrollWidth: 1024`.
 
-Release validation and private deployment are recorded after the final gate in
-this document. Public access and public repository publication remain owner
-actions.
+Release validation and deployment are recorded after the final gate in this
+document. Public Sites publication is complete; public repository publication
+remains a separate owner action.
 
 ## Source and data audit
 
@@ -98,15 +98,19 @@ measured zero and lint completed normally. No manifest or lockfile changed.
 
 ## Access and publication audit
 
-- Sites version 9 is active at the canonical URL.
-- Access is custom owner-only; no external visitors or groups are allowed.
-- Public access is available to the owner as a selectable access mode.
-- Anonymous HTTP checks returned 401 for both `/` and the case route.
+- Sites version 10 is active at the canonical URL from commit
+  `cc15de929bb8da8fc16b443372d16e73358bb8ed`.
+- Access is Public; no owner login, invitation, or credentials are required.
+- Anonymous HTTP checks returned 200 for both `/` and the case route.
+- The public case route exposed exactly seven WebMCP tools, passed a READ smoke
+  test, and completed one fresh human-approved synthetic ACT journey.
+- Public desktop and 390 px mobile checks had no horizontal overflow or console
+  errors, and refresh restored the initial 4/5 state.
 - No Git remote is configured, so no public repository exists yet.
 - Apache-2.0 now exists at repository root; `NOTICE` preserves the brand/trademark distinction.
 
-Therefore both publication gates remain `NOT READY` until the owner explicitly
-authorizes the access/visibility changes and post-change smoke tests pass.
+The Site publication gate is `PASS`. The repository publication gate remains
+`NOT READY` until the owner separately authorizes that visibility change.
 
 ## Validation record
 
@@ -119,11 +123,11 @@ authorizes the access/visibility changes and post-change smoke tests pass.
 | Final production build | PASS — completed once inside `npm test` |
 | Local production preview | PASS — 1600, 1024, and 390 widths; clean console; exactly seven tools |
 | Clean-clone verification | PASS — fresh Node 22 install, TypeScript, lint, production build, and 33/33 tests at release commit `5089239` |
-| Private Sites candidate | Planned next from the validated release commit; deployment outcome belongs in the final run report |
+| Public Sites release | PASS — version 10, anonymous landing/case 200, seven tools, READ smoke, full synthetic journey |
 
 ## Release decision
 
 Implementation-neutral hardening: **VALIDATED**.  
 Live guarded-ACT evidence: **PASS — original failure retained; post-fix run passed**.  
-Site publication gate: **NOT READY — owner-controlled**.  
+Site publication gate: **PASS — public, anonymous access verified**.
 Repository publication gate: **NOT READY — owner-controlled**.

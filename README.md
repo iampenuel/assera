@@ -11,7 +11,7 @@ understand a synthetic prior-authorization denial, identify missing
 administrative information, prepare an exact package, retain human approval,
 and record a simulated—not real—submission.
 
-- **Live demo:** [owner review candidate](https://assera-webmcp.stanleyzebulonp.chatgpt.site) — public judge access is pending owner authorization.
+- **Live demo:** [https://assera-webmcp.stanleyzebulonp.chatgpt.site](https://assera-webmcp.stanleyzebulonp.chatgpt.site) — public, with no login required.
 - **Demo video:** `PUBLIC_YOUTUBE_URL_PENDING`
 - **Direct synthetic case:** `/case/NS-PA-48291`
 
@@ -157,9 +157,9 @@ authorized post-fix ACT journey passed; Chrome remains an explicit gap. See
 ## Known limitations
 
 One synthetic case; ephemeral in-memory state; no ASSERA-owned production auth,
-database, real insurer integration, clinical validation, or public access yet.
-Chrome remains unobserved in this environment. Public Sites and repository
-visibility are explicit owner-controlled release gates.
+database, real insurer integration, or clinical validation. Chrome remains
+unobserved in this environment. Repository visibility remains a separate,
+owner-controlled release gate.
 
 ## License and author
 

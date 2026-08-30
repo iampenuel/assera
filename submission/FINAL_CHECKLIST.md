@@ -16,26 +16,26 @@
 
 ## Live app
 
-- [ ] Public and judge-accessible without login
-- [ ] Landing and case routes return 200 signed out
-- [ ] Exactly seven tools visible
-- [ ] Full 4/5 → receipt journey works
-- [ ] Repeat ACT reuses one receipt
-- [ ] Refresh resets
-- [ ] Synthetic-only data and no secrets
-- [ ] No console errors
-- [ ] Desktop/tablet/mobile checked
+- [x] Public and judge-accessible without login
+- [x] Landing and case routes return 200 signed out
+- [x] Exactly seven tools visible
+- [x] Full 4/5 → receipt journey works
+- [x] Repeat ACT reuses one receipt
+- [x] Refresh resets
+- [x] Synthetic-only data and no secrets
+- [x] No console errors
+- [x] Desktop/tablet/mobile checked
 
 ## Repository
 
 - [ ] Public visibility owner-approved
-- [ ] Apache-2.0 detected
-- [ ] README and documentation complete
-- [ ] Source, approved assets, and curated evidence present
-- [ ] Clean clone installs/builds under Node 22
-- [ ] Final validation and secret/local-path scans pass
+- [x] Apache-2.0 detected
+- [x] README and documentation complete
+- [x] Source, approved assets, and curated evidence present
+- [x] Clean clone installs/builds under Node 22
+- [x] Final validation and secret/local-path scans pass
 - [ ] Final commit pushed to `main`
-- [ ] No generated archives, environment files, or local paths tracked
+- [x] No generated archives, environment files, or local paths tracked
 
 ## Video
 
@@ -52,6 +52,6 @@
 
 - [ ] Submit with a substantial deadline buffer
 - [ ] Preserve final URLs throughout judging
-- [ ] Site publication gate explicitly approved
+- [x] Site publication gate explicitly approved
 - [ ] Repository publication gate explicitly approved
 - [ ] Demo/video placeholders replaced everywhere

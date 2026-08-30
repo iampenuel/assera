@@ -103,8 +103,8 @@ failure modes that unit tests cannot.
 
 ## What is next
 
-First: complete the public access and repository gates and rerun the guarded
-live ACT path. Longer term—outside this challenge release—ASSERA could explore
+First: complete the public repository gate. Longer term—outside this challenge
+release—ASSERA could explore
 additional synthetic case types, durable consent-aware storage, audited payer
 integrations, and a separate branded ChatGPT App distribution layer.
 
@@ -115,6 +115,6 @@ Node test runner, and CSS.
 
 ## Links
 
-- Live URL: `PUBLIC_LIVE_URL_PENDING`
+- Live URL: https://assera-webmcp.stanleyzebulonp.chatgpt.site
 - Repository: `PUBLIC_REPOSITORY_URL_PENDING`
 - Demo video: `PUBLIC_YOUTUBE_URL_PENDING`

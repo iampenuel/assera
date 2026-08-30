@@ -4,20 +4,19 @@ Audit date: 2026-08-29
 
 ## Current state
 
-- Site: ASSERA, Sites version 9.
+- Site: ASSERA, Sites version 10.
 - Canonical URL: `https://assera-webmcp.stanleyzebulonp.chatgpt.site`
-- Access mode: custom, owner only.
-- Allowed non-owner users/groups: none.
-- External visitors: none.
-- Owner role: confirmed.
-- Available owner access modes: custom and public.
-- Anonymous landing request: HTTP 401.
-- Anonymous case request: HTTP 401.
-- Owner-authenticated in-app browser: landing, case route, and seven WebMCP
-  tools loaded.
+- Release commit: `cc15de929bb8da8fc16b443372d16e73358bb8ed`.
+- Access mode: public Internet.
+- Anonymous landing request: HTTP 200.
+- Anonymous case request: HTTP 200.
+- No login, invitation, credentials, or owner session required.
+- Public case route: exactly seven WebMCP tools discovered.
+- Public READ and complete synthetic 4/5 → receipt journeys: PASS.
+- Desktop and 390 px mobile rendering: PASS, with no horizontal overflow or
+  console errors.
 
-Current judge result: **NOT ACCESSIBLE** without the owner session. This is a
-publication blocker, not an application defect.
+Current judge result: **ACCESSIBLE** without the owner session.
 
 ## Required final state
 
@@ -27,23 +26,16 @@ publication blocker, not an application defect.
 - seven tools discoverable in an eligible WebMCP judge environment;
 - no credentials in Devpost testing instructions.
 
-## Owner publication steps
+## Publication verification completed
 
-After the release candidate and live guarded-ACT gate pass:
-
-1. Open ASSERA’s Sites project sharing/access control.
-2. Change audience from the current custom owner-only policy to **Public**
-   (the account reports this mode is available).
-3. Confirm the canonical landing URL did not change.
-4. In a signed-out/private browser, load `/` and `/case/NS-PA-48291`; both must
-   return 200 and render without an authentication prompt.
-5. In an eligible in-app browser or WebMCP-enabled Chrome session, verify the
-   seven-tool inventory and run a fresh READ → blocked PREPARE → human confirm
-   → PREPARE → preview → human approval → simulated ACT journey.
-6. Only then replace public URL placeholders in README/Devpost/video materials.
-
-The owner may alternatively explicitly authorize Codex to set the Sites access
-mode to public, but that authorization has not been given in this milestone.
+1. The owner explicitly authorized public access.
+2. The existing Sites project audience changed to **Public** without creating a
+   fork or new site version.
+3. The canonical URL remained unchanged.
+4. Independent anonymous requests to `/` and `/case/NS-PA-48291` returned 200.
+5. An eligible WebMCP browser discovered the exact seven-tool inventory, ran a
+   public READ call, and completed a fresh human-approved simulation journey.
+6. Refresh restored the initial synthetic 4/5 workspace.
 
 ## Fallback
 
@@ -53,5 +45,5 @@ registration, synthetic fixtures, and safety behavior. Do not build a separate
 fork or add an MCP/Apps SDK layer. Run the same anonymous and WebMCP smoke tests
 before using the fallback URL.
 
-**PUBLICATION GATE — NOT READY**. Public mode is available, but it has not been
-selected and anonymous checks still return 401.
+**PUBLICATION GATE — PASS**. Sites version 10 is publicly accessible without
+authentication at the canonical URL.
