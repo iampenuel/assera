@@ -1,0 +1,39 @@
+{
+  "name": "assera",
+  "version": "0.1.0",
+  "description": "A branded, read-only launcher and guide for the public ASSERA synthetic prior-authorization demo.",
+  "author": {
+    "name": "Penuel Stanley-Zebulon"
+  },
+  "homepage": "https://assera-webmcp.stanleyzebulonp.chatgpt.site",
+  "license": "Apache-2.0",
+  "keywords": [
+    "assera",
+    "webmcp",
+    "synthetic-demo",
+    "prior-authorization"
+  ],
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "ASSERA",
+    "shortDescription": "Open and understand ASSERA’s synthetic denial demo.",
+    "longDescription": "ASSERA is a branded launcher and guide for a public, fully synthetic WebMCP demonstration. The website remains the authoritative source for its seven case tools and human-control workflow.",
+    "developerName": "Penuel Stanley-Zebulon",
+    "category": "Productivity",
+    "capabilities": [
+      "Interactive",
+      "Read"
+    ],
+    "websiteURL": "https://assera-webmcp.stanleyzebulonp.chatgpt.site",
+    "defaultPrompt": [
+      "Show me the ASSERA synthetic prior-authorization demo.",
+      "Help me understand Maya’s synthetic MRI denial.",
+      "Open Maya’s case and explain the READ → PREPARE → CONTROL → ACT flow."
+    ],
+    "brandColor": "#3C2924",
+    "composerIcon": "./assets/icon.png",
+    "logo": "./assets/logo.png",
+    "logoDark": "./assets/logo-dark.png"
+  }
+}

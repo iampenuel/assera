@@ -1,0 +1,20 @@
+{
+  "name": "assera-local",
+  "interface": {
+    "displayName": "Assera Local"
+  },
+  "plugins": [
+    {
+      "name": "assera",
+      "source": {
+        "source": "local",
+        "path": "./plugins/assera"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}

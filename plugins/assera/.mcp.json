@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "assera": {
+      "cwd": "./server",
+      "command": "node",
+      "args": [
+        "dist/entry.mjs"
+      ]
+    }
+  }
+}
