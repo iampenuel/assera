@@ -885,27 +885,47 @@ test("all four eval specifications parse and ACT remains simulated", async () =>
   assert.equal(actEval.scenarios.every(({ external_network_request }) => external_network_request === false), true);
 });
 
-test("source integration contains inline continuation, accessible review, human fallback, receipt, and exactly one ACT tool", async () => {
-  const [dashboard, main, workspace, review, receipt, registrar] = await Promise.all([
+test("source integration contains one local continuation pattern, accessible review, human fallback, receipt, and exactly one ACT tool", async () => {
+  const [dashboard, main, workspace, continuation, review, receipt, styles, registrar] = await Promise.all([
     readFile(new URL("../components/case/case-dashboard.tsx", import.meta.url), "utf8"),
     readFile(new URL("../components/case/case-main.tsx", import.meta.url), "utf8"),
     readFile(new URL("../components/case/appeal-workspace.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../components/case/workflow-continuation.tsx", import.meta.url), "utf8"),
     readFile(new URL("../components/case/appeal-package-review.tsx", import.meta.url), "utf8"),
     readFile(new URL("../components/case/submission-receipt.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
     readFile(new URL("../webmcp/register-case-tools.ts", import.meta.url), "utf8"),
   ]);
   assert.match(dashboard, /registerCaseTools\(\{\s*adapter: toolAdapter,/s);
   assert.equal((dashboard.match(/onPrepare=\{prepareAppeal\}/g) ?? []).length, 2);
+  assert.equal((dashboard.match(/onReviewPackage=\{reviewPackage\}/g) ?? []).length, 2);
+  assert.equal((dashboard.match(/onReviewReceipt=\{reviewReceipt\}/g) ?? []).length, 2);
+  assert.equal((dashboard.match(/uiActions\.prepareAppeal\(\)/g) ?? []).length, 1);
+  assert.equal((dashboard.match(/uiActions\.approveAppealPackage\(/g) ?? []).length, 1);
+  assert.equal((dashboard.match(/uiActions\.submitAppeal\(\)/g) ?? []).length, 1);
   assert.match(main, /<AppealWorkspace[\s\S]*onPrepare=\{onPrepare\}/);
   assert.match(workspace, /Ready to prepare locally/);
-  assert.match(workspace, /<button type="button" onClick=\{onPrepare\}>/);
+  assert.match(workspace, /Appeal draft prepared/);
+  assert.match(workspace, /Review appeal package/);
+  assert.match(workspace, /Receipt recorded/);
+  assert.match(workspace, /onPrimary=\{onPrepare\}/);
+  assert.match(workspace, /onPrimary=\{onReviewPackage\}/);
+  assert.match(workspace, /onPrimary=\{onReviewReceipt\}/);
+  assert.equal((workspace.match(/<WorkflowContinuation/g) ?? []).length, 3);
+  assert.match(continuation, /ready-to-prepare/);
+  assert.match(continuation, /draft-prepared/);
+  assert.match(continuation, /receipt-recorded/);
   assert.match(workspace, /Draft version/);
   assert.match(review, /<fieldset/);
   assert.match(review, /I have reviewed the appeal statement, documents, and/);
   assert.match(review, /Approve this package/);
   assert.match(review, /Revoke approval/);
   assert.match(review, /Run simulated submission/);
+  assert.match(review, /onClick=\{onReviewPackage\}>Review approved package/);
   assert.match(receipt, /No real insurer was/);
+  assert.match(styles, /\.workflow-continuation\.is-receipt-recorded/);
+  assert.match(styles, /\.submitted-next-step[\s\S]*background: var\(--surface\)/);
+  assert.doesNotMatch(styles, /mint|green glow|green haze/i);
   assert.equal((registrar.match(/name: SUBMIT_APPEAL_TOOL_NAME/g) ?? []).length, 1);
   assert.doesNotMatch(registrar, /approve_appeal|approve_package|revoke_approval|send_appeal|get_appeal_status|cancel_submission|resubmit_appeal/);
   assert.doesNotMatch(`${dashboard}${workspace}${review}${receipt}${registrar}`, /requestUserInteraction|fetch\(/);

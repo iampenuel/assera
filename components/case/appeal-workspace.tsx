@@ -16,6 +16,7 @@ import type {
 } from "../../types/case";
 import { AppealPackageReview } from "./appeal-package-review";
 import { SubmissionReceipt } from "./submission-receipt";
+import { WorkflowContinuation } from "./workflow-continuation";
 
 interface AppealWorkspaceProps {
   readonly draft: AppealDraft | null;
@@ -23,6 +24,7 @@ interface AppealWorkspaceProps {
   readonly readiness: AppealReadiness;
   readonly confirmation: TreatmentDateConfirmation | null;
   readonly onPrepare: () => PrepareAppealResult;
+  readonly onReviewPackage: () => void;
   readonly preview: AppealPackagePreview | null;
   readonly onSaveStatement: (statement: string) => AppealDraft;
   readonly onApprovePackage: (
@@ -32,6 +34,7 @@ interface AppealWorkspaceProps {
   readonly onRevokeApproval: () => boolean;
   readonly submission: AppealSubmission | null;
   readonly onSubmitSimulation: () => SubmitAppealResult;
+  readonly onReviewReceipt: () => void;
 }
 
 export function AppealWorkspace({
@@ -40,42 +43,31 @@ export function AppealWorkspace({
   readiness,
   confirmation,
   onPrepare,
+  onReviewPackage,
   preview,
   onSaveStatement,
   onApprovePackage,
   onRevokeApproval,
   submission,
   onSubmitSimulation,
+  onReviewReceipt,
 }: AppealWorkspaceProps) {
   if (!draft) {
     return (
-      <section
-        id="appeal-workspace"
-        className={readiness.ready_to_prepare ? "appeal-workspace-ready" : "appeal-workspace-anchor"}
-        tabIndex={-1}
-        aria-live="polite"
-        aria-label="Appeal draft workspace"
-      >
+      <div id="appeal-workspace" className="appeal-workspace-anchor">
         {readiness.ready_to_prepare && confirmation ? (
-          <>
-            <div className="inline-prepare-copy">
-              <p className="case-section-label">PREPARE</p>
-              <h2>Ready to prepare locally</h2>
-              <p>
-                All five administrative requirements are complete. Preparing a
-                draft creates it only inside this temporary ASSERA workspace.
-                Nothing is submitted.
-              </p>
-            </div>
-            <div className="inline-prepare-actions">
-              <button type="button" onClick={onPrepare}>
-                Prepare appeal draft <span aria-hidden="true">→</span>
-              </button>
-              <span className="draft-safety-label">NOT SUBMITTED</span>
-            </div>
-          </>
+          <WorkflowContinuation
+            id="workflow-continuation-ready"
+            state="ready-to-prepare"
+            eyebrow="PREPARE"
+            title="Ready to prepare locally"
+            description="All five administrative requirements are complete. Preparing a draft creates it only in this temporary ASSERA workspace. Nothing is submitted."
+            primaryLabel="Prepare appeal draft"
+            statusLabel="NOT SUBMITTED"
+            onPrimary={onPrepare}
+          />
         ) : null}
-      </section>
+      </div>
     );
   }
 
@@ -86,10 +78,12 @@ export function AppealWorkspace({
       evidence={evidence}
       preview={preview!}
       onSaveStatement={onSaveStatement}
+      onReviewPackage={onReviewPackage}
       onApprovePackage={onApprovePackage}
       onRevokeApproval={onRevokeApproval}
       submission={submission}
       onSubmitSimulation={onSubmitSimulation}
+      onReviewReceipt={onReviewReceipt}
     />
   );
 }
@@ -99,13 +93,15 @@ function PreparedAppealWorkspace({
   evidence,
   preview,
   onSaveStatement,
+  onReviewPackage,
   onApprovePackage,
   onRevokeApproval,
   submission,
   onSubmitSimulation,
+  onReviewReceipt,
 }: Pick<
   AppealWorkspaceProps,
-  "evidence" | "preview" | "onSaveStatement" | "onApprovePackage" | "onRevokeApproval" | "submission" | "onSubmitSimulation"
+  "evidence" | "preview" | "onSaveStatement" | "onReviewPackage" | "onApprovePackage" | "onRevokeApproval" | "submission" | "onSubmitSimulation" | "onReviewReceipt"
 > & {
   readonly draft: AppealDraft;
 }) {
@@ -144,6 +140,18 @@ function PreparedAppealWorkspace({
 
   return (
     <>
+    {submission ? null : (
+      <WorkflowContinuation
+        id="workflow-continuation-draft"
+        state="draft-prepared"
+        eyebrow="PREPARE COMPLETE"
+        title="Appeal draft prepared"
+        description={`Draft v${draft.version} is stored locally and remains unsubmitted. Review the exact package before Maya decides whether to approve it.`}
+        primaryLabel="Review appeal package"
+        statusLabel="NOT SUBMITTED"
+        onPrimary={onReviewPackage}
+      />
+    )}
     <section
       id="appeal-workspace"
       className="appeal-workspace"
@@ -240,9 +248,24 @@ function PreparedAppealWorkspace({
         onApprove={onApprovePackage}
         onRevoke={onRevokeApproval}
         onSubmit={onSubmitSimulation}
+        onReviewPackage={onReviewPackage}
       />
     ) : null}
-    {submission ? <SubmissionReceipt submission={submission} /> : null}
+    {submission ? (
+      <>
+        <WorkflowContinuation
+          id="workflow-continuation-receipt"
+          state="receipt-recorded"
+          eyebrow="ACT · SIMULATION COMPLETE"
+          title="Receipt recorded"
+          description="No real insurer was contacted. The exact approved package is finalized with one immutable simulated receipt."
+          primaryLabel="Review receipt"
+          statusLabel="SIMULATION ONLY"
+          onPrimary={onReviewReceipt}
+        />
+        <SubmissionReceipt submission={submission} />
+      </>
+    ) : null}
     </>
   );
 }

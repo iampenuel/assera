@@ -150,6 +150,7 @@ interface CaseMainProps {
     input: ConfirmTreatmentDatesInput,
   ) => ConfirmTreatmentDatesResult;
   readonly onPrepare: () => PrepareAppealResult;
+  readonly onReviewPackage: () => void;
   readonly onSaveDraft: (statement: string) => AppealDraft;
   readonly onApprovePackage: (
     packageVersion: string,
@@ -157,6 +158,7 @@ interface CaseMainProps {
   ) => AppealApproval;
   readonly onRevokeApproval: () => boolean;
   readonly onSubmitSimulation: () => SubmitAppealResult;
+  readonly onReviewReceipt: () => void;
 }
 
 export function CaseMain({
@@ -166,10 +168,12 @@ export function CaseMain({
   onCancelDates,
   onConfirmDates,
   onPrepare,
+  onReviewPackage,
   onSaveDraft,
   onApprovePackage,
   onRevokeApproval,
   onSubmitSimulation,
+  onReviewReceipt,
 }: CaseMainProps) {
   const physicalTherapyEvidence = snapshot.effectiveEvidence.find(
     (document) => document.id === "evidence-physical-therapy",
@@ -206,12 +210,14 @@ export function CaseMain({
         readiness={snapshot.readiness}
         confirmation={snapshot.treatmentDateConfirmation}
         onPrepare={onPrepare}
+        onReviewPackage={onReviewPackage}
         preview={packagePreview}
         onSaveStatement={onSaveDraft}
         onApprovePackage={onApprovePackage}
         onRevokeApproval={onRevokeApproval}
         submission={snapshot.appealSubmission}
         onSubmitSimulation={onSubmitSimulation}
+        onReviewReceipt={onReviewReceipt}
       />
       <p className="case-disclaimer">
         ASSERA is a demonstration of healthcare access navigation. It does not provide medical or legal advice.

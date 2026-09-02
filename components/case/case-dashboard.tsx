@@ -79,7 +79,7 @@ export function CaseDashboard({ caseId }: { readonly caseId: string }) {
 
   const prepareAppeal = () => {
     const result = uiActions.prepareAppeal();
-    focusWorkspaceElement("appeal-workspace");
+    focusWorkspaceElement("workflow-continuation-draft");
     return result;
   };
 
@@ -90,10 +90,27 @@ export function CaseDashboard({ caseId }: { readonly caseId: string }) {
   const submitSimulation = () => {
     const result = uiActions.submitAppeal();
     setDateFormOpen(false);
-    focusWorkspaceElement(
-      "simulated-submission-receipt",
-      "#submission-receipt-title",
+    focusWorkspaceElement("workflow-continuation-receipt");
+    return result;
+  };
+
+  const approvePackage = (packageVersion: string, confirmation: boolean) => {
+    const result = uiActions.approveAppealPackage(
+      packageVersion,
+      confirmation,
     );
+    focusWorkspaceElement("workflow-continuation-approved");
+    return result;
+  };
+
+  const revokeApproval = () => {
+    const result = uiActions.revokeAppealApproval();
+    if (result) {
+      focusWorkspaceElement(
+        "appeal-package-review",
+        "#approval-status-title",
+      );
+    }
     return result;
   };
 
@@ -143,12 +160,14 @@ export function CaseDashboard({ caseId }: { readonly caseId: string }) {
         onCancelDates={closeTreatmentDates}
         onConfirmDates={confirmTreatmentDates}
         onPrepare={prepareAppeal}
+        onReviewPackage={reviewPackage}
         onSaveDraft={(statement) =>
           uiActions.updateDraftStatement(statement)
         }
-        onApprovePackage={uiActions.approveAppealPackage}
-        onRevokeApproval={uiActions.revokeAppealApproval}
+        onApprovePackage={approvePackage}
+        onRevokeApproval={revokeApproval}
         onSubmitSimulation={submitSimulation}
+        onReviewReceipt={reviewReceipt}
       />
       <RightRail
         snapshot={snapshot}
@@ -156,7 +175,7 @@ export function CaseDashboard({ caseId }: { readonly caseId: string }) {
         onReviewDates={openTreatmentDates}
         onPrepare={prepareAppeal}
         onReviewPackage={reviewPackage}
-        onRevokeApproval={uiActions.revokeAppealApproval}
+        onRevokeApproval={revokeApproval}
         onRunSimulation={submitSimulation}
         onReviewReceipt={reviewReceipt}
       />

@@ -26,6 +26,7 @@ interface AppealPackageReviewProps {
   ) => AppealApproval;
   readonly onRevoke: () => boolean;
   readonly onSubmit: () => SubmitAppealResult;
+  readonly onReviewPackage: () => void;
 }
 
 function displaySharedValue(
@@ -48,6 +49,7 @@ export function AppealPackageReview({
   onApprove,
   onRevoke,
   onSubmit,
+  onReviewPackage,
 }: AppealPackageReviewProps) {
   const [confirmed, setConfirmed] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -194,7 +196,11 @@ export function AppealPackageReview({
           <div>
             <h3 id="approval-status-title">Approval status</h3>
             {isApproved ? (
-              <div className="approved-state">
+              <div
+                id={isSubmitted ? undefined : "workflow-continuation-approved"}
+                className="approved-state workflow-continuation-inline"
+                tabIndex={isSubmitted ? undefined : -1}
+              >
                 <p className="approved-state-label">
                   {isSubmitted ? "APPROVAL RETAINED · PACKAGE FINALIZED" : "APPROVED LOCALLY — NOT SUBMITTED"}
                 </p>
@@ -213,13 +219,13 @@ export function AppealPackageReview({
                   {isSubmitted ? null : (
                     <>
                       <button className="simulation-action" type="button" onClick={handleSubmit}>
-                        Run simulated submission
+                        Run simulated submission <span aria-hidden="true">→</span>
                       </button>
-                      <a className="review-approved-action" href="#package-statement">Review approved package</a>
+                      <button className="review-approved-action" type="button" onClick={onReviewPackage}>Review approved package</button>
                       <button className="revoke-approval-action" type="button" onClick={onRevoke}>Revoke approval</button>
                     </>
                   )}
-                  {isSubmitted ? <a className="review-approved-action" href="#package-statement">Review approved package</a> : null}
+                  {isSubmitted ? <button className="review-approved-action" type="button" onClick={onReviewPackage}>Review approved package</button> : null}
                 </div>
                 {!isSubmitted ? (
                   <p className={`form-message ${error ? "is-error" : ""}`} role={error ? "alert" : "status"}>
