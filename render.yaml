@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: assera-companion-mcp
+    runtime: node
+    # Preview only: Render Free sleeps when idle. Upgrade to 0.5c-512mb only
+    # after explicit owner approval and before a production directory submission.
+    plan: free
+    rootDir: plugins/assera
+    buildCommand: npm --prefix server ci && npm --prefix server run build
+    startCommand: npm --prefix server run start:http
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_VERSION
+        value: 22.23.1
+      - key: HOST
+        value: 0.0.0.0

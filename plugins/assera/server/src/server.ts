@@ -27,6 +27,22 @@ export const DEMO_INFO = Object.freeze({
   webmcp_tool_count: 7,
 });
 
+export function getWidgetDomain(): string | undefined {
+  const configuredOrigin =
+    process.env.ASSERA_WIDGET_ORIGIN?.trim() || process.env.RENDER_EXTERNAL_URL?.trim();
+
+  if (!configuredOrigin) {
+    return undefined;
+  }
+
+  const url = new URL(configuredOrigin);
+  if (url.protocol !== "https:") {
+    throw new Error("ASSERA widget origin must use HTTPS.");
+  }
+
+  return url.origin;
+}
+
 const sourceDirectory = dirname(fileURLToPath(import.meta.url));
 const pluginRoot = resolve(sourceDirectory, "../..");
 
@@ -58,6 +74,7 @@ const outputSchema = {
 };
 
 export function createAsseraServer(): McpServer {
+  const widgetDomain = getWidgetDomain();
   const server = new McpServer({
     name: "assera-plugin-server",
     version: "0.1.0",
@@ -77,6 +94,7 @@ export function createAsseraServer(): McpServer {
           _meta: {
             ui: {
               prefersBorder: false,
+              ...(widgetDomain ? { domain: widgetDomain } : {}),
               csp: {
                 connectDomains: [],
                 resourceDomains: [SITE_ORIGIN],
@@ -86,6 +104,7 @@ export function createAsseraServer(): McpServer {
             "openai/widgetDescription":
               "A branded, read-only launcher for ASSERA and Maya’s public synthetic prior-authorization case.",
             "openai/widgetPrefersBorder": false,
+            ...(widgetDomain ? { "openai/widgetDomain": widgetDomain } : {}),
             "openai/widgetCSP": {
               connect_domains: [],
               resource_domains: [SITE_ORIGIN],
@@ -141,7 +160,8 @@ export async function runStdio(): Promise<void> {
   console.error("ASSERA Plugin MCP server running over stdio.");
 }
 
-export function runHttp(): void {
+export function runHttp(): ReturnType<typeof createHttpServer> {
+  const host = process.env.HOST ?? "127.0.0.1";
   const port = Number(process.env.PORT ?? 8787);
   const httpServer = createHttpServer(async (request, response) => {
     const requestUrl = new URL(request.url ?? "/", `http://${request.headers.host ?? "localhost"}`);
@@ -158,6 +178,25 @@ export function runHttp(): void {
         "cache-control": "no-store",
       });
       response.end(buildWidgetHtml());
+      return;
+    }
+
+    if (
+      request.method === "GET" &&
+      requestUrl.pathname === "/.well-known/openai-apps-challenge"
+    ) {
+      const challengeToken = process.env.OPENAI_APPS_CHALLENGE_TOKEN?.trim();
+      if (!challengeToken) {
+        response.writeHead(404).end("Not found");
+        return;
+      }
+
+      response.writeHead(200, {
+        "content-type": "text/plain; charset=utf-8",
+        "cache-control": "no-store",
+        "x-content-type-options": "nosniff",
+      });
+      response.end(challengeToken);
       return;
     }
 
@@ -188,7 +227,9 @@ export function runHttp(): void {
     response.writeHead(404).end("Not found");
   });
 
-  httpServer.listen(port, "127.0.0.1", () => {
-    console.error(`ASSERA Plugin MCP server listening on http://127.0.0.1:${port}/mcp`);
+  httpServer.listen(port, host, () => {
+    console.error(`ASSERA Plugin MCP server listening on http://${host}:${port}/mcp`);
   });
+
+  return httpServer;
 }
