@@ -40,7 +40,7 @@ function NextSafeStep({
   if (snapshot.appealSubmission) {
     return (
       <section id="next-safe-step" className="rail-card next-step-card submitted-next-step" aria-labelledby="next-step-title">
-        <p className="case-section-label">SIMULATION COMPLETE</p>
+        <p className="case-section-label completion-label"><span aria-hidden="true">✓</span> SIMULATION COMPLETE</p>
         <h2 id="next-step-title">Receipt recorded</h2>
         <p>The exact approved package is finalized with one immutable simulated receipt.</p>
         <button type="button" onClick={onReviewReceipt}>Review receipt <span aria-hidden="true">→</span></button>
@@ -58,7 +58,7 @@ function NextSafeStep({
           <p>Maya approved this exact package version. Your agent or you can now record a local simulation.</p>
           <button type="button" onClick={onRunSimulation}>Run simulated submission <span aria-hidden="true">→</span></button>
           <button className="rail-secondary-action" type="button" onClick={onReviewPackage}>Review approved package</button>
-          <button className="rail-secondary-action" type="button" onClick={() => onRevokeApproval()}>Revoke approval</button>
+          <button className="rail-secondary-action rail-reversal-action" type="button" onClick={() => onRevokeApproval()}>Revoke approval</button>
           <small>Simulation only. No real insurer will be contacted.</small>
         </section>
       );

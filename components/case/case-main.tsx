@@ -3,6 +3,7 @@ import { buildAppealPackagePreview } from "../../domain/appeal-package";
 import type {
   AppealApproval,
   AppealDraft,
+  PrepareAppealResult,
   SubmitAppealResult,
   CaseWorkspaceSnapshot,
   ConfirmTreatmentDatesInput,
@@ -148,6 +149,7 @@ interface CaseMainProps {
   readonly onConfirmDates: (
     input: ConfirmTreatmentDatesInput,
   ) => ConfirmTreatmentDatesResult;
+  readonly onPrepare: () => PrepareAppealResult;
   readonly onSaveDraft: (statement: string) => AppealDraft;
   readonly onApprovePackage: (
     packageVersion: string,
@@ -163,6 +165,7 @@ export function CaseMain({
   onReviewDates,
   onCancelDates,
   onConfirmDates,
+  onPrepare,
   onSaveDraft,
   onApprovePackage,
   onRevokeApproval,
@@ -202,6 +205,7 @@ export function CaseMain({
         evidence={snapshot.effectiveEvidence}
         readiness={snapshot.readiness}
         confirmation={snapshot.treatmentDateConfirmation}
+        onPrepare={onPrepare}
         preview={packagePreview}
         onSaveStatement={onSaveDraft}
         onApprovePackage={onApprovePackage}

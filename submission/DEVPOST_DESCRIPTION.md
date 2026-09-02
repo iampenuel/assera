@@ -74,6 +74,11 @@ The case page registers exactly seven tools through one abortable lifecycle:
 human UI. If WebMCP is unavailable, the human fallback uses the same domain
 command and safety checks.
 
+The repository also includes a branded ChatGPT companion with exactly one
+read-only MCP launcher tool, `show_assera_demo`. It opens and explains the
+public synthetic case without duplicating the website's seven authoritative
+WebMCP tools or human controls.
+
 ## Challenges
 
 The hardest part was not generating text; it was preserving truthful authority
@@ -103,15 +108,15 @@ failure modes that unit tests cannot.
 
 ## What is next
 
-First: complete the public repository gate. Longer term—outside this challenge
-release—ASSERA could explore
-additional synthetic case types, durable consent-aware storage, audited payer
-integrations, and a separate branded ChatGPT App distribution layer.
+Next: record the under-three-minute public product video and complete the final
+submission. Longer term—outside this challenge release—ASSERA could explore
+additional synthetic case types, durable consent-aware storage, and audited
+payer integrations.
 
 ## Built with
 
-WebMCP, React, TypeScript, vinext/Vite, Node.js 22, Cloudflare/Sites runtime,
-Node test runner, and CSS.
+WebMCP, MCP Apps SDK, React, TypeScript, vinext/Vite, Node.js 22,
+Cloudflare/Sites runtime, Node test runner, and CSS.
 
 ## Links
 

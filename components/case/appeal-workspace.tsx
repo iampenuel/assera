@@ -10,6 +10,7 @@ import type {
   AppealReadiness,
   AppealSubmission,
   EvidenceDocument,
+  PrepareAppealResult,
   TreatmentDateConfirmation,
   SubmitAppealResult,
 } from "../../types/case";
@@ -21,6 +22,7 @@ interface AppealWorkspaceProps {
   readonly evidence: readonly EvidenceDocument[];
   readonly readiness: AppealReadiness;
   readonly confirmation: TreatmentDateConfirmation | null;
+  readonly onPrepare: () => PrepareAppealResult;
   readonly preview: AppealPackagePreview | null;
   readonly onSaveStatement: (statement: string) => AppealDraft;
   readonly onApprovePackage: (
@@ -37,6 +39,7 @@ export function AppealWorkspace({
   evidence,
   readiness,
   confirmation,
+  onPrepare,
   preview,
   onSaveStatement,
   onApprovePackage,
@@ -55,15 +58,21 @@ export function AppealWorkspace({
       >
         {readiness.ready_to_prepare && confirmation ? (
           <>
-            <div>
+            <div className="inline-prepare-copy">
               <p className="case-section-label">PREPARE</p>
               <h2>Ready to prepare locally</h2>
               <p>
                 All five administrative requirements are complete. Preparing a
-                draft will create it only in this temporary ASSERA workspace.
+                draft creates it only inside this temporary ASSERA workspace.
+                Nothing is submitted.
               </p>
             </div>
-            <span className="draft-safety-label">NOT SUBMITTED</span>
+            <div className="inline-prepare-actions">
+              <button type="button" onClick={onPrepare}>
+                Prepare appeal draft <span aria-hidden="true">→</span>
+              </button>
+              <span className="draft-safety-label">NOT SUBMITTED</span>
+            </div>
           </>
         ) : null}
       </section>
@@ -103,6 +112,7 @@ function PreparedAppealWorkspace({
   const [statement, setStatement] = useState(draft.statement);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const isDirty = statement !== draft.statement;
 
   const includedDocuments = draft.evidence_ids
     .map((id) => evidence.find((document) => document.id === id)?.name)
@@ -203,8 +213,10 @@ function PreparedAppealWorkspace({
         </p>
         {submission ? (
           <span className="finalized-field-label">READ-ONLY AFTER SIMULATION</span>
-        ) : (
+        ) : isDirty ? (
           <button type="button" onClick={handleSave}>Save changes</button>
+        ) : (
+          <span className="draft-saved-state">Current version saved</span>
         )}
       </div>
 

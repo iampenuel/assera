@@ -1,7 +1,7 @@
 # Accessibility QA
 
-Review date: 2026-08-29  
-Surface: private Sites version 9 plus source inspection and Milestone 05 evidence
+Review date: 2026-09-01
+Surface: public Sites version 10 plus final Phase 07C/07D source and visual QA
 
 Overall status: **CONDITIONAL PASS**. No blocking semantic, labeling, focus-style,
 contrast-signaling, or mobile-overflow defect was found. Automated Tab-key
@@ -32,7 +32,7 @@ simulated receipt, finalized package, and READ/PREPARE/CONTROL/ACT activity.
 | Receipt readability | PASS | Heading, confirmation number, metadata list, and explicit no-real-insurer statements. |
 | Mobile menu | PASS | Native `details`/`summary`; summary measured 70×44 px and opened a named navigation. |
 | Touch targets | PASS with minor note | Primary controls meet 44 px; the logo link measured 42 px high at desktop but is not a mobile task control. |
-| 390×844 overflow | PASS on deployed v9 | Landing and initial case measured `scrollWidth === innerWidth`. |
+| 390×844 overflow | PASS | Landing and case continuation measured `scrollWidth === innerWidth`; the inline Prepare CTA remained visible after date confirmation. |
 | Reduced motion | PASS | CSS disables smooth behavior; intentional focus helper uses `matchMedia`. |
 | Browser console | PASS | No warning/error entries during landing, case, form, prepared package, or injection checks. |
 

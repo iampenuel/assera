@@ -142,6 +142,7 @@ export function CaseDashboard({ caseId }: { readonly caseId: string }) {
         onReviewDates={openTreatmentDates}
         onCancelDates={closeTreatmentDates}
         onConfirmDates={confirmTreatmentDates}
+        onPrepare={prepareAppeal}
         onSaveDraft={(statement) =>
           uiActions.updateDraftStatement(statement)
         }

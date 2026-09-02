@@ -7,7 +7,7 @@ This package is a companion to the frozen public ASSERA website. It is deliberat
 ```text
 ChatGPT or Codex
   └─ ASSERA Plugin
-       ├─ skill: demo guidance and safety boundary
+       ├─ skill: product guidance and safety boundary
        ├─ show_assera_demo: one read-only launcher tool
        └─ widget: brand, workflow summary, public links
             └─ opens the public ASSERA website
@@ -24,12 +24,14 @@ The repository plugin launches the prebuilt single-file MCP server over local st
 
 - Tool: `show_assera_demo`
 - Classification: read-only, non-destructive, idempotent, closed-world
-- UI resource: `ui://widget/assera-demo-v1.html`
+- UI resource: `ui://widget/assera-demo-v3.html`
 - MIME: `text/html;profile=mcp-app`
 - State: none
 - Authentication: none
 
-The tool returns only stable demo metadata: brand name, tagline, public landing and case URLs, synthetic status, WebMCP status, and the website tool count.
+The tool returns only stable launcher metadata: brand name, tagline, public
+landing and case URLs, synthetic status, WebMCP status, and the website tool
+count.
 
 ## Widget bridge
 
@@ -37,4 +39,7 @@ The widget initializes the standard MCP Apps bridge over JSON-RPC `postMessage` 
 
 ## CSP and privacy
 
-The widget declares no connect, resource, or frame domains. Its legacy compatibility metadata permits redirects only to `https://assera-webmcp.stanleyzebulonp.chatgpt.site`. There is no analytics, tracking, storage, third-party content, PHI, insurer endpoint, or submission request.
+The widget declares no connect or frame domains. It allows the public ASSERA
+origin as its sole resource domain for the approved hero photograph and as its
+sole redirect domain for user-initiated navigation. There is no analytics,
+tracking, storage, PHI, insurer endpoint, or submission request.

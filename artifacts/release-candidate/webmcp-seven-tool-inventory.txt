@@ -1,5 +1,5 @@
-ASSERA WebMCP inventory — authentic observation from private Sites version 9
-Observed: 2026-08-29 in ChatGPT's in-app browser
+ASSERA WebMCP inventory — authentic observation from public Sites version 10
+Observed: 2026-08-30 in ChatGPT's in-app browser
 Route: /case/NS-PA-48291
 
 1. get_denial_details — READ
@@ -17,8 +17,6 @@ approval_id, and mode; mode was the constant "simulation".
 No approval, revocation, edit, real submission, cancellation, or resubmission
 tool was present.
 
-Capture limitation: the browser notification was exposed as structured text,
-not as a screenshot-capable page element. Before final Devpost submission,
-manually capture the seven-tool notification in an eligible browser after the
-release-candidate deployment and replace/supplement this text only with an
-authentic capture. Do not use the prior six-tool image.
+The public landing and case routes were accessible without an owner session.
+The public case completed a READ smoke test and a fresh synthetic 4/5-to-receipt
+journey without adding or removing tools.

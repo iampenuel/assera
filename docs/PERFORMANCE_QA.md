@@ -14,7 +14,7 @@ No heavy audit dependency was installed.
 | Duplicate registration | PASS | Deterministic test asserts exactly seven unique tools and one registration signal. |
 | Render loops | PASS | No repeated activity or registration observed after idle navigation/action. |
 | Submission network traffic | PASS | No endpoint exists; tests fail if preparation/ACT call `fetch`. |
-| Route behavior | PASS with access caveat | Authenticated browser loaded `/` and case route; anonymous requests correctly return 401 while owner-only. |
+| Route behavior | PASS | Anonymous requests return 200 for both the public landing and case routes; no owner session is required. |
 | Responsive overflow | PASS | v9 showed 56 px overflow at 1024×768. The candidate moves case-shell collapse to 1080 px; local production QA measured 1024 px viewport and 1024 px document width. |
 | 1600/1440/768/390 layout | PASS | Deployed-v9 coverage passed all listed widths except the now-fixed 1024 case shell; candidate local production QA reconfirmed 1600 and 390 without overflow. |
 | Slow/blocked assets | PASS by observed UI | Hero, logos, typography, and case surfaces loaded; no browser warning/error. |
@@ -33,13 +33,13 @@ candidate collapses only the case layout by 1080 px. Local production QA after
 the final build measured no overflow at 1024, 1600, or 390. Desktop 1440/1600
 and tablet/mobile ≤768 behavior remain otherwise unchanged.
 
-State evidence under `artifacts/release-candidate/` covers 4/5, 5/5, draft,
-review, human approval, receipt, finalized package, mobile receipt, activity,
-and injection text.
+Curated evidence under `artifacts/release-candidate/` covers the landing page,
+initial 4/5 state, confirmed-date continuation, human approval hierarchy,
+neutral receipt, activity taxonomy, plugin surfaces, and inert injection text.
 
 ## Runtime boundary
 
-The application is a deterministic in-memory demo. It has no database call,
+The application is a deterministic in-memory synthetic experience. It has no database call,
 analytics SDK, upload, webhook, payer API, polling loop, or submission request.
 Refresh resets the workspace. The production build gate records bundle/build
 completion in `docs/RELEASE_AUDIT.md`.

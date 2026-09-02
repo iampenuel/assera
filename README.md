@@ -6,12 +6,19 @@
 
 > **A denial isn’t the final word.**
 
-ASSERA is a human-centered, browser-native WebMCP workspace that helps a person
-understand a synthetic prior-authorization denial, identify missing
+Most healthcare AI tries to automate prior authorization for institutions.
+ASSERA uses WebMCP to make the patient-facing website itself a structured agent
+interface—so a person and their agent can understand a denial, prepare the next
+step, and act together while the person retains control.
+
+ASSERA is a human-centered, patient-side healthcare access platform for
+navigating prior-authorization denials. The public experience uses a fully
+synthetic patient, insurer, policy, and submission workflow. Its browser-native
+WebMCP workspace helps a person understand a denial, identify missing
 administrative information, prepare an exact package, retain human approval,
 and record a simulated—not real—submission.
 
-- **Live demo:** [https://assera-webmcp.stanleyzebulonp.chatgpt.site](https://assera-webmcp.stanleyzebulonp.chatgpt.site) — public, with no login required.
+- **Public experience:** [https://assera-webmcp.stanleyzebulonp.chatgpt.site](https://assera-webmcp.stanleyzebulonp.chatgpt.site) — no login required.
 - **Demo video:** `PUBLIC_YOUTUBE_URL_PENDING`
 - **Direct synthetic case:** `/case/NS-PA-48291`
 
@@ -37,7 +44,20 @@ state-aware tools. ChatGPT orchestrates conversation; ASSERA remains the source
 of truth for evidence, deterministic rules, guarded mutation, provenance, and
 visible activity.
 
-## Demonstration journey
+### READ / PREPARE / CONTROL / ACT
+
+- **READ** lets the agent inspect denial, policy, evidence, readiness, and the
+  exact package without changing case information.
+- **PREPARE** lets the agent create or reuse deterministic local content after
+  the human supplies required facts.
+- **CONTROL** belongs to Maya: she confirms dates, edits the statement, and
+  approves or revokes an exact package version in the ASSERA UI.
+- **ACT** records one local simulation only after that exact approval.
+
+CONTROL is intentionally not a WebMCP tool. Giving the agent an approval tool
+would collapse the boundary the product is designed to preserve.
+
+## Synthetic case journey
 
 1. Ask why the MRI was denied and what is missing: readiness is 4/5.
 2. Ask to prepare too early: `PREPARE_BLOCKED`, no invented dates or draft.
@@ -85,6 +105,14 @@ See [WebMCP architecture](docs/WEBMCP_ARCHITECTURE.md) and the
 There is no WebMCP tool to confirm dates, edit, approve, revoke, replace package
 content, contact a real payer, cancel, or resubmit.
 
+## ChatGPT companion
+
+`plugins/assera/` packages a branded companion that exposes exactly one
+read-only MCP tool: `show_assera_demo`. It opens and explains the public
+synthetic case; it does not mirror case state or duplicate the website's seven
+WebMCP tools. The website remains authoritative for the workflow and all human
+controls.
+
 ## Safety boundary
 
 - one fictional case and fictional insurer/policy/providers;
@@ -112,7 +140,7 @@ Then open `http://localhost:3000` (or the port printed by the dev server).
 Validation:
 
 ```bash
-npx tsc --noEmit --incremental false
+npx tsc --noEmit --incremental false --allowImportingTsExtensions
 npm run lint
 npm test
 npm run build
@@ -140,7 +168,7 @@ authorized post-fix ACT journey passed; Chrome remains an explicit gap. See
 
 <p>
   <img src="artifacts/release-candidate/landing-desktop-1600x900-local-final.jpg" alt="ASSERA landing page" width="49%" />
-  <img src="artifacts/release-candidate/live-postfix-simulated-receipt-local.png" alt="ASSERA simulated receipt" width="49%" />
+  <img src="artifacts/release-candidate/simulated-receipt-neutral.jpg" alt="ASSERA simulated receipt" width="49%" />
 </p>
 
 ## Repository map
@@ -158,8 +186,7 @@ authorized post-fix ACT journey passed; Chrome remains an explicit gap. See
 
 One synthetic case; ephemeral in-memory state; no ASSERA-owned production auth,
 database, real insurer integration, or clinical validation. Chrome remains
-unobserved in this environment. Repository visibility remains a separate,
-owner-controlled release gate.
+unobserved in this environment.
 
 ## License and author
 

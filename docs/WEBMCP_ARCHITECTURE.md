@@ -94,7 +94,9 @@ simulated ACT.
 
 ## Distribution boundary
 
-WebMCP is the hackathon’s core integration: tools live in the page and operate
-on the page’s current state. A future branded ChatGPT App could provide an MCP
-server/Apps SDK distribution layer, but that is a separate future project and
-is not part of this release.
+WebMCP is the hackathon’s core integration: seven tools live in the page and
+operate on the page’s current state. The repository also includes a branded
+ChatGPT companion with one read-only MCP launcher tool, `show_assera_demo`, and
+the resource `ui://widget/assera-demo-v3.html`. The companion does not read,
+mirror, or mutate case state; it directs people to the public website, which
+remains the authoritative workflow surface.

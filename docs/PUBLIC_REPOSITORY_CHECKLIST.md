@@ -1,12 +1,12 @@
 # Public repository checklist
 
-Audit date: 2026-08-29
+Audit date: 2026-09-01
 
-## Current state
+## Pre-publication state
 
 - Branch: `main`.
-- Git remote: none configured.
-- Hosting provider/visibility: not applicable; no public remote exists.
+- Git remote: created only after the final validated release commit.
+- Visibility: Public, explicitly owner-authorized for Phase 08.
 - Source/assets: tracked, including the approved hero and official logos.
 - Generated builds/dependencies/environments: ignored.
 - Canonical release evidence: explicitly allowed under
@@ -15,7 +15,7 @@ Audit date: 2026-08-29
 - Secret/environment files: none found.
 - Root license: Apache-2.0; `NOTICE` distinguishes software licensing from
   ASSERA brand identifiers.
-- Clean-clone/build result: pending final gate.
+- Clean-clone/build result: required from the public URL after push.
 
 ## Owner-controlled publication steps
 
@@ -25,8 +25,8 @@ Audit date: 2026-08-29
 2. Add the remote, for example `git remote add origin <repository-url>`.
 3. Push the release commit with `git push -u origin main`.
 4. Change repository visibility to Public only with owner approval.
-5. Add description: “Human-centered, browser-native WebMCP workflow for a
-   synthetic prior-authorization appeal demonstration.”
+5. Add description: “Human-centered, patient-side healthcare access navigation
+   powered by WebMCP.”
 6. Add the final public website URL in the repository About field.
 7. Add focused topics such as `webmcp`, `chatgpt`, `react`, `typescript`,
    `accessibility`, and `healthcare-navigation`.
@@ -45,5 +45,5 @@ Audit date: 2026-08-29
   necessity, appeal success, or real insurer integration.
 - Keep the repository’s synthetic-data statement visible.
 
-**REPOSITORY PUBLICATION GATE — NOT READY**. A release commit, clean-clone
-verification, remote selection, push, and explicit visibility approval remain.
+**REPOSITORY PUBLICATION GATE — OWNER AUTHORIZED**. The Phase 08 release is
+complete only after the public push and independent public-clone verification.

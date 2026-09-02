@@ -1,8 +1,9 @@
 # ASSERA release audit
 
-Audit date: 2026-08-30  
-Baseline: Sites version 9, commit `ca2bd331895f2b612ee0e2aa8047071a4a56bc5a`  
-Candidate scope: Milestone 06 hardening and submission preparation
+Audit date: 2026-09-01
+Public-site baseline: Sites version 10, commit `cc15de929bb8da8fc16b443372d16e73358bb8ed`
+Source baseline: `b1791c2940795fb257d1aa6da43c49501af82ad4` plus validated Phase 07C/07D work
+Candidate scope: final website, ChatGPT companion, and public-repository hygiene
 
 ## Executive result
 
@@ -106,23 +107,25 @@ measured zero and lint completed normally. No manifest or lockfile changed.
   test, and completed one fresh human-approved synthetic ACT journey.
 - Public desktop and 390 px mobile checks had no horizontal overflow or console
   errors, and refresh restored the initial 4/5 state.
-- No Git remote is configured, so no public repository exists yet.
+- Public repository publication is explicitly owner-authorized for Phase 08;
+  the remote is created only after the final hygiene/validation commit.
 - Apache-2.0 now exists at repository root; `NOTICE` preserves the brand/trademark distinction.
 
-The Site publication gate is `PASS`. The repository publication gate remains
-`NOT READY` until the owner separately authorizes that visibility change.
+The Site publication gate is `PASS`. The repository publication gate is
+owner-authorized and proceeds only after the final local release gate passes.
 
 ## Validation record
 
 | Gate | Result |
 |---|---|
 | Targeted WebMCP/domain tests | PASS — 29/29 |
-| TypeScript (`--incremental false`) | PASS |
+| TypeScript (`--incremental false --allowImportingTsExtensions`) | PASS |
 | Lint | PASS |
 | Complete test suite | PASS — 33/33 |
 | Final production build | PASS — completed once inside `npm test` |
 | Local production preview | PASS — 1600, 1024, and 390 widths; clean console; exactly seven tools |
-| Clean-clone verification | PASS — fresh Node 22 install, TypeScript, lint, production build, and 33/33 tests at release commit `5089239` |
+| Prior website clean-clone verification | PASS — fresh Node 22 install, TypeScript, lint, production build, and 33/33 tests at release commit `5089239` |
+| Final website + plugin public-clone verification | REQUIRED after the Phase 08 public push |
 | Public Sites release | PASS — version 10, anonymous landing/case 200, seven tools, READ smoke, full synthetic journey |
 
 ## Release decision
@@ -130,4 +133,5 @@ The Site publication gate is `PASS`. The repository publication gate remains
 Implementation-neutral hardening: **VALIDATED**.  
 Live guarded-ACT evidence: **PASS — original failure retained; post-fix run passed**.  
 Site publication gate: **PASS — public, anonymous access verified**.
-Repository publication gate: **NOT READY — owner-controlled**.
+Repository publication gate: **AUTHORIZED — final commit, public push, and
+clean-public-clone verification are required by Phase 08**.

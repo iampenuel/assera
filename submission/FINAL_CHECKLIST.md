@@ -28,11 +28,11 @@
 
 ## Repository
 
-- [ ] Public visibility owner-approved
+- [x] Public visibility owner-approved
 - [x] Apache-2.0 detected
 - [x] README and documentation complete
 - [x] Source, approved assets, and curated evidence present
-- [x] Clean clone installs/builds under Node 22
+- [ ] Final public clone installs/builds under Node 22
 - [x] Final validation and secret/local-path scans pass
 - [ ] Final commit pushed to `main`
 - [x] No generated archives, environment files, or local paths tracked
@@ -53,5 +53,5 @@
 - [ ] Submit with a substantial deadline buffer
 - [ ] Preserve final URLs throughout judging
 - [x] Site publication gate explicitly approved
-- [ ] Repository publication gate explicitly approved
+- [x] Repository publication gate explicitly approved
 - [ ] Demo/video placeholders replaced everywhere

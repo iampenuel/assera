@@ -52148,7 +52148,7 @@ data:
 
 // src/server.ts
 var TOOL_NAME = "show_assera_demo";
-var WIDGET_URI = "ui://widget/assera-demo-v1.html";
+var WIDGET_URI = "ui://widget/assera-demo-v3.html";
 var SITE_ORIGIN = "https://assera-webmcp.stanleyzebulonp.chatgpt.site";
 var CASE_URL = `${SITE_ORIGIN}/case/NS-PA-48291`;
 var DEMO_INFO = Object.freeze({
@@ -52165,9 +52165,9 @@ var pluginRoot = resolve(sourceDirectory, "../..");
 function readPluginFile(path) {
   return readFileSync(resolve(pluginRoot, path), "utf8");
 }
-function imageDataUri(path) {
+function imageDataUri(path, mimeType = "image/png") {
   const bytes = readFileSync(resolve(pluginRoot, path));
-  return `data:image/png;base64,${bytes.toString("base64")}`;
+  return `data:${mimeType};base64,${bytes.toString("base64")}`;
 }
 function buildWidgetHtml() {
   return readPluginFile("web/index.html").replace("/* __ASSERA_STYLES__ */", readPluginFile("web/styles.css")).replace("/* __ASSERA_APP__ */", readPluginFile("web/app.js")).replaceAll("__ASSERA_LOGO_LIGHT__", imageDataUri("assets/logo.png")).replaceAll("__ASSERA_LOGO_DARK__", imageDataUri("assets/logo-dark.png"));
@@ -52199,18 +52199,18 @@ function createAsseraServer() {
           text: buildWidgetHtml(),
           _meta: {
             ui: {
-              prefersBorder: true,
+              prefersBorder: false,
               csp: {
                 connectDomains: [],
-                resourceDomains: [],
+                resourceDomains: [SITE_ORIGIN],
                 frameDomains: []
               }
             },
-            "openai/widgetDescription": "A branded, read-only launcher for the public ASSERA synthetic WebMCP demo.",
-            "openai/widgetPrefersBorder": true,
+            "openai/widgetDescription": "A branded, read-only launcher for ASSERA and Maya\u2019s public synthetic prior-authorization case.",
+            "openai/widgetPrefersBorder": false,
             "openai/widgetCSP": {
               connect_domains: [],
-              resource_domains: [],
+              resource_domains: [SITE_ORIGIN],
               redirect_domains: [SITE_ORIGIN]
             }
           }
@@ -52222,8 +52222,8 @@ function createAsseraServer() {
     server,
     TOOL_NAME,
     {
-      title: "Show ASSERA demo",
-      description: "Shows the branded launcher and guidance for ASSERA\u2019s public, fully synthetic prior-authorization WebMCP demo. Use when someone asks to open, see, explore, or understand ASSERA or Maya\u2019s synthetic case. This tool does not inspect or mutate case state; the website exposes the seven authoritative WebMCP tools.",
+      title: "Open ASSERA",
+      description: "Shows the branded ASSERA launcher and guidance for the public synthetic prior-authorization case experience. Use when someone asks to open, see, explore, or understand ASSERA or Maya\u2019s synthetic case. This tool does not inspect or mutate case state; the public website exposes the seven authoritative WebMCP tools.",
       inputSchema: {},
       outputSchema,
       annotations: {
@@ -52236,14 +52236,14 @@ function createAsseraServer() {
         ui: { resourceUri: WIDGET_URI },
         "openai/outputTemplate": WIDGET_URI,
         "openai/toolInvocation/invoking": "Opening ASSERA\u2026",
-        "openai/toolInvocation/invoked": "ASSERA demo ready"
+        "openai/toolInvocation/invoked": "ASSERA ready"
       }
     },
     async () => ({
       content: [
         {
           type: "text",
-          text: "ASSERA\u2019s public synthetic demo is ready. Open the website or Maya\u2019s case to use its seven authoritative WebMCP tools."
+          text: "ASSERA is open. Maya\u2019s case is synthetic, and the public site exposes seven WebMCP tools for the case workflow."
         }
       ],
       structuredContent: DEMO_INFO

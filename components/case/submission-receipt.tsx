@@ -23,7 +23,7 @@ export function SubmissionReceipt({
             contacted and no external network request occurred.
           </p>
         </div>
-        <span>RECORDED</span>
+        <span className="receipt-status"><span aria-hidden="true">✓</span> RECORDED</span>
       </div>
 
       <div className="receipt-confirmation">

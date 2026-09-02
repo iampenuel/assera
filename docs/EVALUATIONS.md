@@ -10,9 +10,10 @@ not be collapsed into one headline number.
    redirects, unknown-case handling, and production route structure.
 3. **JSON scenario specifications** preserve the intended READ, PREPARE,
    review/approval, and ACT behavior in `evals/*-layer.json`.
-4. **Observed live-agent evals** record tool selection and browser state against
-   private Sites version 9 plus one authorized post-fix run against the private
-   local production candidate. They are probabilistic/environmental evidence,
+4. **Observed live-agent evals** record tool selection and browser state from
+   the pre-publication Sites candidate plus an authorized post-fix run. Public
+   Sites version 10 subsequently passed anonymous READ and complete synthetic
+   journey smoke tests. Live results are probabilistic/environmental evidence,
    not a substitute for deterministic tests.
 
 ## Live environments
@@ -97,7 +98,7 @@ idempotency because deterministic tests already cover retries and concurrency.
 ## Remaining uncertainty
 
 - Chrome behavior is unobserved in this run.
-- The post-fix end-to-end 4/5 → receipt journey passed on the private local
-  production candidate; deployed-candidate smoke testing remains a release step.
+- The post-fix end-to-end 4/5 → receipt journey and the public Sites version 10
+  smoke journey passed; broader agent behavior remains environment-dependent.
 - Agent behavior can vary across model versions and browser tool snapshots.
 - Tests cover one synthetic case and do not validate real payer workflows.

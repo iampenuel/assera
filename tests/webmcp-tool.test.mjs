@@ -885,15 +885,20 @@ test("all four eval specifications parse and ACT remains simulated", async () =>
   assert.equal(actEval.scenarios.every(({ external_network_request }) => external_network_request === false), true);
 });
 
-test("source integration contains accessible review, human fallback, receipt, and exactly one ACT tool", async () => {
-  const [dashboard, workspace, review, receipt, registrar] = await Promise.all([
+test("source integration contains inline continuation, accessible review, human fallback, receipt, and exactly one ACT tool", async () => {
+  const [dashboard, main, workspace, review, receipt, registrar] = await Promise.all([
     readFile(new URL("../components/case/case-dashboard.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../components/case/case-main.tsx", import.meta.url), "utf8"),
     readFile(new URL("../components/case/appeal-workspace.tsx", import.meta.url), "utf8"),
     readFile(new URL("../components/case/appeal-package-review.tsx", import.meta.url), "utf8"),
     readFile(new URL("../components/case/submission-receipt.tsx", import.meta.url), "utf8"),
     readFile(new URL("../webmcp/register-case-tools.ts", import.meta.url), "utf8"),
   ]);
   assert.match(dashboard, /registerCaseTools\(\{\s*adapter: toolAdapter,/s);
+  assert.equal((dashboard.match(/onPrepare=\{prepareAppeal\}/g) ?? []).length, 2);
+  assert.match(main, /<AppealWorkspace[\s\S]*onPrepare=\{onPrepare\}/);
+  assert.match(workspace, /Ready to prepare locally/);
+  assert.match(workspace, /<button type="button" onClick=\{onPrepare\}>/);
   assert.match(workspace, /Draft version/);
   assert.match(review, /<fieldset/);
   assert.match(review, /I have reviewed the appeal statement, documents, and/);

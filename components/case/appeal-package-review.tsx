@@ -210,15 +210,16 @@ export function AppealPackageReview({
                     : "Maya approved this exact package version for a future simulated submission. Nothing has been sent."}
                 </p>
                 <div className="approved-actions">
-                  <a href="#package-statement">Review approved package</a>
                   {isSubmitted ? null : (
                     <>
                       <button className="simulation-action" type="button" onClick={handleSubmit}>
                         Run simulated submission
                       </button>
-                      <button type="button" onClick={onRevoke}>Revoke approval</button>
+                      <a className="review-approved-action" href="#package-statement">Review approved package</a>
+                      <button className="revoke-approval-action" type="button" onClick={onRevoke}>Revoke approval</button>
                     </>
                   )}
+                  {isSubmitted ? <a className="review-approved-action" href="#package-statement">Review approved package</a> : null}
                 </div>
                 {!isSubmitted ? (
                   <p className={`form-message ${error ? "is-error" : ""}`} role={error ? "alert" : "status"}>
@@ -259,8 +260,13 @@ export function AppealPackageReview({
         </section>
       </div>
 
-      <div className={isSubmitted ? "package-submitted" : "package-not-submitted"}>
+      <div
+        className={isSubmitted ? "package-submitted" : "package-not-submitted"}
+        role="status"
+        aria-live="polite"
+      >
         <strong>
+          {isSubmitted ? <span className="status-check" aria-hidden="true">✓</span> : null}
           {isSubmitted ? "Simulated submission recorded." : "Nothing has been submitted."}
         </strong>
         <span>

@@ -51,15 +51,23 @@ test("server exposes exactly one read-only launcher tool and its branded resourc
     assert.deepEqual(listed.tools.map((tool) => tool.name), ["show_assera_demo"]);
 
     const tool = listed.tools[0];
+    assert.equal(tool.title, "Open ASSERA");
+    assert.match(tool.description, /public synthetic prior-authorization case experience/);
     assert.deepEqual(tool.annotations, {
       readOnlyHint: true,
       destructiveHint: false,
       idempotentHint: true,
       openWorldHint: false,
     });
-    assert.equal(tool._meta.ui.resourceUri, "ui://widget/assera-demo-v1.html");
+    assert.equal(tool._meta.ui.resourceUri, "ui://widget/assera-demo-v3.html");
+    assert.equal(tool._meta["openai/toolInvocation/invoking"], "Opening ASSERA…");
+    assert.equal(tool._meta["openai/toolInvocation/invoked"], "ASSERA ready");
 
     const result = await client.callTool({ name: "show_assera_demo", arguments: {} });
+    assert.equal(
+      result.content[0].text,
+      "ASSERA is open. Maya’s case is synthetic, and the public site exposes seven WebMCP tools for the case workflow.",
+    );
     assert.deepEqual(result.structuredContent, {
       name: "ASSERA",
       tagline: "A denial isn’t the final word.",
@@ -70,21 +78,33 @@ test("server exposes exactly one read-only launcher tool and its branded resourc
       webmcp_tool_count: 7,
     });
 
-    const resource = await client.readResource({ uri: "ui://widget/assera-demo-v1.html" });
+    const resource = await client.readResource({ uri: "ui://widget/assera-demo-v3.html" });
     assert.equal(resource.contents.length, 1);
     assert.equal(resource.contents[0].mimeType, "text/html;profile=mcp-app");
     assert.match(resource.contents[0].text, /Maya’s synthetic case/);
     assert.match(resource.contents[0].text, /ui\/initialize/);
     assert.match(resource.contents[0].text, /openExternal/);
-    assert.doesNotMatch(resource.contents[0].text, /__ASSERA_(?:STYLES|APP|LOGO)/);
+    assert.match(
+      resource.contents[0].text,
+      /https:\/\/assera-webmcp\.stanleyzebulonp\.chatgpt\.site\/media\/assera-hero-background\.png/,
+    );
+    assert.doesNotMatch(resource.contents[0].text, /data:image\/webp;base64,/);
+    assert.doesNotMatch(resource.contents[0].text, /class="hero-image"/);
+    assert.doesNotMatch(resource.contents[0].text, /__ASSERA_(?:STYLES|APP|LOGO|HERO)/);
+    assert.equal(resource.contents[0]._meta.ui.prefersBorder, false);
+    assert.equal(resource.contents[0]._meta["openai/widgetPrefersBorder"], false);
+    assert.equal(
+      resource.contents[0]._meta["openai/widgetDescription"],
+      "A branded, read-only launcher for ASSERA and Maya’s public synthetic prior-authorization case.",
+    );
     assert.deepEqual(resource.contents[0]._meta.ui.csp, {
       connectDomains: [],
-      resourceDomains: [],
+      resourceDomains: ["https://assera-webmcp.stanleyzebulonp.chatgpt.site"],
       frameDomains: [],
     });
     assert.deepEqual(resource.contents[0]._meta["openai/widgetCSP"], {
       connect_domains: [],
-      resource_domains: [],
+      resource_domains: ["https://assera-webmcp.stanleyzebulonp.chatgpt.site"],
       redirect_domains: ["https://assera-webmcp.stanleyzebulonp.chatgpt.site"],
     });
   } finally {

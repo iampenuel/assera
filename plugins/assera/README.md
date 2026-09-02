@@ -1,12 +1,12 @@
 # ASSERA Plugin
 
-A local, repository-packaged Plugin that gives ASSERA a branded presence in supported ChatGPT and Codex plugin surfaces. It launches and explains the public synthetic demo while preserving the website as the single authoritative source for case state and its seven WebMCP tools.
+A local, repository-packaged Plugin that gives ASSERA a branded presence in supported ChatGPT and Codex plugin surfaces. It opens and explains Maya’s public synthetic case experience while preserving the website as the single authoritative source for case state and its seven WebMCP tools.
 
 ## What it includes
 
 - one skill: `assera-demo`
 - one read-only MCP tool: `show_assera_demo`
-- one responsive vanilla widget with light and dark treatments
+- one responsive photographic launcher widget derived from the ASSERA visual system
 - one repository marketplace entry at `.agents/plugins/marketplace.json`
 - local stdio transport plus opt-in local HTTP development mode
 
@@ -22,7 +22,7 @@ It does not add an eighth website tool, duplicate any case action, store data, c
 From `plugins/assera/server`:
 
 ```bash
-npm install
+npm ci
 npm run build
 npm run check
 ```
@@ -59,7 +59,7 @@ Then use `http://127.0.0.1:8787/mcp` in MCP Inspector. A local visual-only widge
 2. Start an approved Secure MCP Tunnel to port 8787.
 3. In ChatGPT, enable Developer Mode under Settings → Security and login.
 4. On the Plugins page, add the tunnel’s HTTPS URL ending in `/mcp`.
-5. Open a new chat, select ASSERA, and ask: “Show me the ASSERA synthetic prior-authorization demo.”
+5. Open a new chat, select ASSERA, and ask: “Open ASSERA and show me Maya’s synthetic prior-authorization case.”
 6. Confirm the branded card renders, both links open only the public ASSERA origin, and the tool result reports `synthetic: true` and `webmcp_tool_count: 7`.
 
 ## Manual screenshots
@@ -68,12 +68,14 @@ If the authenticated ChatGPT plugin surface is unavailable to the test environme
 
 - plugin identity in the Plugins directory or picker
 - ASSERA selected in a new conversation
-- the rendered widget in light mode
-- the rendered widget in dark mode
+- the rendered photographic widget at desktop width
+- the rendered photographic widget at compact width
 - the transition from “Open Maya’s synthetic case” to the public case route
 
-Store screenshots under `artifacts/chatgpt-plugin/`. Do not include private settings, tokens, tunnel credentials, or unrelated conversations.
+Curate public-safe screenshots under `artifacts/release-candidate/`. Do not
+include private settings, tokens, tunnel credentials, or unrelated
+conversations.
 
 ## Safety and product boundary
 
-All demo information is synthetic. The widget contains no case data and performs no fetch, analytics, storage, or submission operation. Human confirmation and approval remain in the website UI. ACT remains explicitly simulated; no real insurer is contacted. Refreshing the public website resets the synthetic workspace.
+All case information is synthetic. The widget contains no case data and performs no fetch, analytics, storage, or submission operation. Human confirmation and approval remain in the website UI. ACT remains explicitly simulated; no real insurer is contacted. Refreshing the public website resets the synthetic workspace.
