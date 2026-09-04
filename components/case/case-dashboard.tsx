@@ -131,22 +131,24 @@ export function CaseDashboard({ caseId }: { readonly caseId: string }) {
         hasSubmission={snapshot.appealSubmission !== null}
       />
       <header className="case-topbar">
-        <AsseraLogo className="case-mobile-logo" />
-        <details className="case-mobile-menu">
-          <summary>Case menu</summary>
-          <CaseNavigation
-            mobile
-            activityCount={snapshot.activities.length}
-            evidenceCount={snapshot.effectiveEvidence.length}
-            readiness={snapshot.readiness}
-            hasDraft={snapshot.appealDraft !== null}
-            hasSubmission={snapshot.appealSubmission !== null}
-          />
-        </details>
-        <div className="workspace-context">
-          <span className="lock-symbol" aria-hidden="true">⌑</span>
-          <span>Private case workspace</span>
-          <span className="synthetic-badge">Synthetic demo case</span>
+        <div className="case-topbar-leading">
+          <AsseraLogo className="case-mobile-logo" />
+          <details className="case-mobile-menu">
+            <summary>Case menu</summary>
+            <CaseNavigation
+              mobile
+              activityCount={snapshot.activities.length}
+              evidenceCount={snapshot.effectiveEvidence.length}
+              readiness={snapshot.readiness}
+              hasDraft={snapshot.appealDraft !== null}
+              hasSubmission={snapshot.appealSubmission !== null}
+            />
+          </details>
+          <div className="workspace-context">
+            <span className="lock-symbol" aria-hidden="true">⌑</span>
+            <span>Private case workspace</span>
+            <span className="synthetic-badge">Synthetic demo case</span>
+          </div>
         </div>
         <div className="patient-profile" aria-label={`${snapshot.caseData.patient.name}, patient`}>
           <span className="patient-avatar" aria-hidden="true">MT</span>
