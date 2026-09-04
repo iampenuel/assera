@@ -18,7 +18,14 @@ The plugin never reads, mirrors, mutates, or persists case state. It makes no ne
 
 ## MCP transport
 
-The repository plugin launches the prebuilt single-file MCP server over local stdio through `.mcp.json`. The TypeScript source is bundled with the repository’s existing esbuild dependency so runtime startup does not need to traverse dependency files. The same server has an explicit `--http` development mode at `http://127.0.0.1:8787/mcp` for MCP Inspector or a Secure MCP Tunnel. No public MCP server is deployed in this phase.
+The repository plugin launches the prebuilt single-file MCP server over local
+stdio through `.mcp.json`. The TypeScript source is bundled with the
+repository’s existing esbuild dependency so runtime startup does not need to
+traverse dependency files. The same server has an explicit `--http`
+development mode at `http://127.0.0.1:8787/mcp` for MCP Inspector or a Secure
+MCP Tunnel. Its public companion endpoint is
+`https://assera-companion-mcp.onrender.com/mcp`; it exposes only the same
+read-only `show_assera_demo` launcher.
 
 ## Tool and resource
 

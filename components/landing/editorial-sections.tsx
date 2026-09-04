@@ -112,7 +112,7 @@ export function SiteFooter() {
         <a href="#safety">Safety</a>
       </nav>
       <div className="footer-meta">
-        <span>Built for the WebMCP Challenge</span>
+        <span>Human-centered healthcare access with WebMCP</span>
         <span>© 2026 ASSERA</span>
       </div>
     </footer>

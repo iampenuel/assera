@@ -38,8 +38,8 @@ synthetic case/ACT boundary.
 
 Decision: the findings do not block this synthetic demonstration, but they
 remain tracked technical debt. Reassess and update through a dedicated,
-tested dependency change after the challenge release. Do not expose local Vite,
-Wrangler, or Miniflare dev servers to untrusted networks.
+tested dependency maintenance change. Do not expose local Vite, Wrangler, or
+Miniflare dev servers to untrusted networks.
 
 ## Safeguards
 

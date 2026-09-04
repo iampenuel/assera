@@ -15,8 +15,8 @@ No heavy audit dependency was installed.
 | Render loops | PASS | No repeated activity or registration observed after idle navigation/action. |
 | Submission network traffic | PASS | No endpoint exists; tests fail if preparation/ACT call `fetch`. |
 | Route behavior | PASS | Anonymous requests return 200 for both the public landing and case routes; no owner session is required. |
-| Responsive overflow | PASS | v9 showed 56 px overflow at 1024×768. The candidate moves case-shell collapse to 1080 px; local production QA measured 1024 px viewport and 1024 px document width. |
-| 1600/1440/768/390 layout | PASS | Deployed-v9 coverage passed all listed widths except the now-fixed 1024 case shell; candidate local production QA reconfirmed 1600 and 390 without overflow. |
+| Responsive overflow | PASS | v9 showed 56 px overflow at 1024×768. The validated source moves case-shell collapse to 1080 px; local production QA measured 1024 px viewport and 1024 px document width. |
+| 1600/1440/768/390 layout | PASS | Deployed-v9 coverage passed all listed widths except the now-fixed 1024 case shell; local production QA reconfirmed 1600 and 390 without overflow. |
 | Slow/blocked assets | PASS by observed UI | Hero, logos, typography, and case surfaces loaded; no browser warning/error. |
 | Lighthouse-style score | NOT_RUN | Existing browser did not expose timing/layout-shift entries and no large audit package was installed. |
 
@@ -29,7 +29,7 @@ CTA, and footer—are captured in the desktop/mobile release evidence.
 
 Initial case measurements matched all five viewports. The deployed version 9
 overflow at 1024×768 was isolated to its 205 + minimum 560 + 315 px grid. The
-candidate collapses only the case layout by 1080 px. Local production QA after
+validated source collapses only the case layout by 1080 px. Local production QA after
 the final build measured no overflow at 1024, 1600, or 390. Desktop 1440/1600
 and tablet/mobile ≤768 behavior remain otherwise unchanged.
 

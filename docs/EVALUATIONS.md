@@ -11,7 +11,7 @@ not be collapsed into one headline number.
 3. **JSON scenario specifications** preserve the intended READ, PREPARE,
    review/approval, and ACT behavior in `evals/*-layer.json`.
 4. **Observed live-agent evals** record tool selection and browser state from
-   the pre-publication Sites candidate plus an authorized post-fix run. Public
+   the validated Sites build plus an authorized post-fix run. Public
    Sites version 10 subsequently passed anonymous READ and complete synthetic
    journey smoke tests. Live results are probabilistic/environmental evidence,
    not a substitute for deterministic tests.

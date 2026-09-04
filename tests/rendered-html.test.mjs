@@ -39,7 +39,7 @@ test("server-renders the public ASSERA landing page", async () => {
   assert.match(html, /HOW IT WORKS/);
   assert.match(html, /Clarity before automation/);
   assert.match(html, /Agency stays with you/);
-  assert.match(html, /Built for the WebMCP Challenge/);
+  assert.match(html, /Human-centered healthcare access with WebMCP/);
   assert.match(html, /© 2026 ASSERA/);
   assert.match(html, /\/media\/assera-hero-background\.png/);
   assert.match(html, /\/brand\/assera-mark-ivory\.png/);

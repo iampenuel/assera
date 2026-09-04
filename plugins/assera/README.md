@@ -58,6 +58,9 @@ Then use `http://127.0.0.1:8787/mcp` in MCP Inspector. A local visual-only widge
 
 The repository includes a minimal `render.yaml` Blueprint for the companion MCP server. It builds only `plugins/assera/server` while keeping `plugins/assera/web` and `plugins/assera/assets` available to the bundled widget at runtime.
 
+Canonical public companion endpoint:
+`https://assera-companion-mcp.onrender.com/mcp`.
+
 The service configuration is:
 
 - root directory: `plugins/assera`
@@ -70,9 +73,16 @@ The service configuration is:
 
 Render supplies `PORT`; the Blueprint sets `HOST=0.0.0.0`. Local HTTP development retains the safe `127.0.0.1:8787` fallback. At runtime, Render's unique `RENDER_EXTERNAL_URL` becomes the widget's `_meta.ui.domain` and `openai/widgetDomain`; a custom unique origin can override it through `ASSERA_WIDGET_ORIGIN`. The service requires no secrets, database, persistent storage, or authentication.
 
-The checked-in Blueprint uses Render Free only as a no-cost deployment preview. Render documents that Free web services sleep after 15 minutes without inbound traffic and are not suitable for production. Before Plugin Directory submission, explicitly upgrade the service to the minimum always-on web-service plan, `0.5c-512mb` (formerly Starter), or another paid always-on plan. Do not apply that paid change without owner approval.
+The checked-in Blueprint uses Render Free only as a no-cost deployment preview. Render documents that Free web services sleep after 15 minutes without inbound traffic and are not suitable for production. For any public use where cold starts are unacceptable, the owner can explicitly upgrade the service to the minimum always-on web-service plan, `0.5c-512mb` (formerly Starter), or another paid always-on plan. Do not apply that paid change without owner approval.
 
-If the OpenAI submission portal later provides a domain-verification token, set it only as the Render environment variable `OPENAI_APPS_CHALLENGE_TOKEN`. The server then returns that exact value from `/.well-known/openai-apps-challenge` with no-store headers. Without a configured token, the path returns `404`; the repository contains no placeholder or real token.
+The server retains optional OpenAI Apps domain-verification compatibility. If a
+trusted OpenAI integration flow provides a domain-verification token, set it
+only as the Render environment variable `OPENAI_APPS_CHALLENGE_TOKEN`. The
+server then returns that exact value from
+`/.well-known/openai-apps-challenge` with no-store headers. Without a configured
+token, the path returns `404`; the repository contains no placeholder or real
+token. This compatibility endpoint does not imply OpenAI affiliation,
+endorsement, or availability in any third-party directory.
 
 ## ChatGPT Developer Mode check
 

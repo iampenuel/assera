@@ -1,197 +1,289 @@
 <p align="center">
-  <img src="public/brand/assera-mark-espresso.png" alt="ASSERA" width="96" />
+  <img src="public/brand/assera-mark-espresso.png" alt="ASSERA mark" width="96" />
 </p>
 
 # ASSERA
 
-> **A denial isn’t the final word.**
+**A denial isn’t the final word.**
 
-Most healthcare AI tries to automate prior authorization for institutions.
-ASSERA uses WebMCP to make the patient-facing website itself a structured agent
-interface—so a person and their agent can understand a denial, prepare the next
-step, and act together while the person retains control.
+Human-centered healthcare access with WebMCP.
 
-ASSERA is a human-centered, patient-side healthcare access platform for
-navigating prior-authorization denials. The public experience uses a fully
-synthetic patient, insurer, policy, and submission workflow. Its browser-native
-WebMCP workspace helps a person understand a denial, identify missing
-administrative information, prepare an exact package, retain human approval,
-and record a simulated—not real—submission.
+ASSERA is a human-centered healthcare access prototype that helps a person and
+their AI agent understand an insurance denial, identify what is missing,
+prepare the next step, and act together while consequential control remains
+human. It is a standalone personal AI engineering project built around
+structured tools, deterministic state, and explicit approval boundaries.
 
-- **Public experience:** [https://assera-webmcp.stanleyzebulonp.chatgpt.site](https://assera-webmcp.stanleyzebulonp.chatgpt.site) — no login required.
-- **Demo video:** `PUBLIC_YOUTUBE_URL_PENDING`
-- **Direct synthetic case:** `/case/NS-PA-48291`
+- [Live experience](https://assera-webmcp.stanleyzebulonp.chatgpt.site/)
+- [Synthetic case](https://assera-webmcp.stanleyzebulonp.chatgpt.site/case/NS-PA-48291)
+- [GitHub](https://github.com/iampenuel/assera)
 
-## Why this problem matters
+![ASSERA landing experience](artifacts/release-candidate/landing-desktop-1600x900-local-final.jpg)
 
-KFF’s analysis of 2024 Medicare Advantage data reports nearly 53 million prior
-authorization determinations, 4.1 million fully or partially denied requests,
-an 11.5% appeal rate among denied requests, and an 80.7% partial/full overturn
-rate among appealed denials. Those figures describe Medicare Advantage—not all
-U.S. insurance—and an overturn does not prove the initial decision was improper.
-See [verified sources](docs/SOURCES.md).
+## AI assists. The human authorizes.
 
-## People and agents work together
+Can an AI agent help someone navigate a healthcare-access problem without
+quietly taking authority away from the person?
 
-The agent can READ denial/policy/evidence/readiness, PREPARE a deterministic
-local draft, inspect the exact package, and record simulated ACT only after the
-human approves that package in ASSERA. Maya alone confirms treatment dates,
-edits the statement, approves/revokes a package, and authorizes the exact
-version. **ASSERA assists. Maya authorizes.**
+ASSERA explores that question through an intentionally asymmetric system:
 
-WebMCP is essential because the website itself exposes current, structured,
-state-aware tools. ChatGPT orchestrates conversation; ASSERA remains the source
-of truth for evidence, deterministic rules, guarded mutation, provenance, and
-visible activity.
+- **The AI can** read, inspect, compare, prepare, preview, and act within a
+  guarded simulation boundary.
+- **The human controls** consequential missing facts, statement edits,
+  exact-package approval, revocation, and authorization of the final action.
 
-### READ / PREPARE / CONTROL / ACT
+The agent gets structured capabilities. The person keeps consequential
+authority.
 
-- **READ** lets the agent inspect denial, policy, evidence, readiness, and the
-  exact package without changing case information.
-- **PREPARE** lets the agent create or reuse deterministic local content after
-  the human supplies required facts.
-- **CONTROL** belongs to Maya: she confirms dates, edits the statement, and
-  approves or revokes an exact package version in the ASSERA UI.
-- **ACT** records one local simulation only after that exact approval.
+## The problem, in plain English
 
-CONTROL is intentionally not a WebMCP tool. Giving the agent an approval tool
-would collapse the boundary the product is designed to preserve.
+Sometimes an insurer requires approval before covering a medical test or
+treatment. If the request is denied, a patient may receive a reason code,
+policy language, documentation requirements, and a deadline without a clear
+understanding of what is missing or what to do next.
 
-## Synthetic case journey
+ASSERA is a prototype for navigating that information problem. It does not
+perform a real insurance appeal. The experience uses a fully synthetic case to
+show how a patient-facing website and an AI agent can work from the same state
+without giving the agent approval authority.
 
-1. Ask why the MRI was denied and what is missing: readiness is 4/5.
-2. Ask to prepare too early: `PREPARE_BLOCKED`, no invented dates or draft.
-3. Maya confirms July 1–August 19, 2026 in the UI: readiness becomes 5/5.
-4. The agent prepares a deterministic local draft; nothing is submitted.
-5. The agent previews the exact statement, four documents, shared information,
-   package/version, approval, and submission status.
-6. Maya approves the exact package version in ASSERA.
-7. The agent passes only current references to simulation-only ACT, producing
-   one immutable receipt. No real insurer is contacted.
+The problem framing is informed by public prior-authorization evidence; the
+figures and important qualifications are documented in [Sources](docs/SOURCES.md).
 
-Refresh resets the ephemeral synthetic workspace.
+## Synthetic case
 
-## Architecture
+| Field | Verified fixture value |
+|---|---|
+| Patient | Maya Thompson |
+| Case | `NS-PA-48291` |
+| Service | MRI — Right Knee |
+| Payer | Northstar Health — fictional |
+| Denial reason | Documentation did not establish six weeks of physician-directed conservative treatment |
+| Initial readiness | 4 / 5 |
+| Missing fact | Explicit treatment start and end dates |
+| Human-confirmed dates | July 1, 2026 through August 19, 2026 |
+| Result | 5 / 5, then a deterministic local draft and guarded simulated ACT |
+
+## Product journey
+
+1. **READ** — The agent inspects the denial, fictional policy, evidence, and
+   deterministic readiness result.
+2. **4 / 5** — One required administrative fact is missing.
+3. **PREPARE BLOCKED** — ASSERA does not let the agent invent or supply the
+   missing human fact.
+4. **HUMAN INPUT** — Maya confirms the treatment dates herself in the ASSERA
+   interface.
+5. **5 / 5** — Preparation becomes available.
+6. **PREPARE** — ASSERA creates a deterministic local draft.
+7. **CONTROL** — Maya reviews and approves the exact package version.
+8. **ACT** — A simulation-only action records one immutable receipt.
+9. **RECEIPT** — No real insurer is contacted and no external network request
+   occurs.
+
+### Product proof
+
+| 4 / 5 readiness | Human approval | Simulated receipt |
+|---|---|---|
+| ![ASSERA case at four of five requirements complete](artifacts/release-candidate/case-initial-desktop-4-of-5.png) | ![ASSERA exact-package human approval state](artifacts/release-candidate/case-approved-action-hierarchy.jpg) | ![ASSERA immutable simulated receipt](artifacts/release-candidate/simulated-receipt-neutral.jpg) |
+| One required date range is still missing. | Maya approves the exact package version herself. | One local receipt records a simulation, not a payer submission. |
+
+## WebMCP architecture
+
+The human interface and the seven website tools operate on one shared,
+reducer-owned case workspace. The UI is not a presentation layer over a second
+agent database; both interfaces observe the same deterministic application
+state.
 
 ```mermaid
 flowchart LR
-  Maya -->|human controls| UI[ASSERA React UI]
-  Agent[ChatGPT agent] -->|7 WebMCP tools| WM[WebMCP layer]
-  UI --> State[Reducer-owned workspace]
-  WM --> State
-  Fixtures[Synthetic fixtures] --> Domain[Deterministic domain logic]
-  Domain --> State
-  State --> Package[Exact package + version]
-  Maya -->|approval| Package
-  Package -->|reference-only simulation| Receipt[Immutable simulated receipt]
-  Receipt -. no network .-> NoPayer[No real insurer]
+  H[Human] --> UI[ASSERA visual interface]
+  A[AI agent] --> WM[Seven WebMCP website tools]
+  UI --> S[Shared deterministic case state]
+  WM --> S
+  F[Immutable synthetic fixtures] --> D[Deterministic domain logic]
+  D --> S
+  S --> P[Exact package + version]
+  H -->|human-only CONTROL| P
+  P -->|reference-only simulated ACT| R[Immutable receipt]
+  R -. no payer network request .-> N[No real insurer]
 ```
 
-See [WebMCP architecture](docs/WEBMCP_ARCHITECTURE.md) and the
-[threat model](docs/THREAT_MODEL.md).
+**5 READ · 1 PREPARE · 1 ACT · 0 agent approval tools**
 
-## Seven WebMCP tools
-
-| Tool | Class | Contract |
+| Tool | Class | Purpose |
 |---|---|---|
-| `get_denial_details` | READ | Decision, reason, deadline |
-| `get_coverage_requirements` | READ | Fictional administrative criteria; no medical judgment |
-| `list_appeal_evidence` | READ | Structured available evidence |
-| `check_appeal_readiness` | READ | Deterministic complete/incomplete comparison |
-| `preview_appeal` | READ | Exact untrusted package content and status |
-| `prepare_appeal` | PREPARE | Create/reuse local draft or return truthful block |
-| `submit_appeal` | ACT | Exact reference-only simulation after human approval |
+| `get_denial_details` | READ | Read the decision, denial reason, and deadline |
+| `get_coverage_requirements` | READ | Read the fictional administrative policy criteria |
+| `list_appeal_evidence` | READ | Read the structured evidence available in the case |
+| `check_appeal_readiness` | READ | Compare requirements with evidence deterministically |
+| `preview_appeal` | READ | Inspect the exact current package and approval status |
+| `prepare_appeal` | PREPARE | Create or reuse a local draft, or return a truthful block |
+| `submit_appeal` | ACT | Record a reference-only simulation after exact human approval |
 
-There is no WebMCP tool to confirm dates, edit, approve, revoke, replace package
-content, contact a real payer, cancel, or resubmit.
+There is intentionally no tool for confirming treatment dates, editing the
+statement, approving a package, revoking approval, or performing a real payer
+submission. Those omissions are part of the product boundary, not missing
+features.
+
+For implementation detail, see [WebMCP architecture](docs/WEBMCP_ARCHITECTURE.md)
+and the [threat model](docs/THREAT_MODEL.md).
+
+## Deterministic design
+
+ASSERA does not delegate important state decisions to the language model.
+Application and domain code own:
+
+- readiness and missing requirements;
+- draft, package, and version identity;
+- approval binding and invalidation;
+- ACT authorization;
+- receipt finalization;
+- idempotency and guarded state transitions.
+
+The model can select a tool and supply schema-valid input. It cannot redefine
+what counts as ready, manufacture human approval, or change the package during
+ACT.
+
+**Determinism belongs in the product, not the model.**
 
 ## ChatGPT companion
 
-`plugins/assera/` packages a branded companion that exposes exactly one
-read-only MCP tool: `show_assera_demo`. It opens and explains the public
-synthetic case; it does not mirror case state or duplicate the website's seven
-WebMCP tools. The website remains authoritative for the workflow and all human
-controls.
+The repository includes a compact branded companion under `plugins/assera/`:
 
-## Safety boundary
+```text
+ChatGPT
+  → ASSERA companion
+    → show_assera_demo
+      → public ASSERA website
+```
 
-- one fictional case and fictional insurer/policy/providers;
-- no uploaded record, PHI, real identifier, or real payer connection;
-- strict schemas with no extra ACT properties;
-- exact case/package/version/approval binding;
-- human-only approval with UI provenance;
-- one idempotent, concurrency-safe, immutable simulated receipt;
-- execution cancellation before commit;
-- prompt/XSS-shaped statement content rendered as inert text;
-- no medical/legal advice, medical-necessity decision, or success prediction;
-- no claim of HIPAA compliance or production readiness.
+The companion exposes exactly one read-only MCP tool: `show_assera_demo`. It is
+an entry point and branded launcher; it does not duplicate the seven website
+tools, retain authoritative case state, or perform a case action. The website
+remains authoritative. Its deployed Streamable HTTP transport is
+`https://assera-companion-mcp.onrender.com/mcp`; it expects MCP POST requests,
+not browser navigation.
 
-## Local setup
+See the [companion README](plugins/assera/README.md) and
+[companion architecture](plugins/assera/ARCHITECTURE.md).
 
-Node.js 22.13+ is required; release validation used 22.23.1.
+## Failures are measured, not hidden.
+
+The machine-readable live-agent record contains 45 rows: 40 completed attempts,
+3 preserved failures, and 5 additional rows not run.
+
+| Metric | Result |
+|---|---:|
+| Correct tool selection | 40 / 40 |
+| Correct arguments | 39 / 40 |
+| Valid sequence | 40 / 40 |
+| No forbidden action | 40 / 40 |
+| Successful or correctly blocked journey | 37 / 40 |
+
+Two failures were stale-state observations. In another live ACT attempt, the
+agent selected the correct tool but used the wrong approval-reference path.
+Browser safety blocked execution, so no receipt or external effect occurred.
+The failure was preserved, tool metadata and regression coverage were improved,
+and a separately authorized path was tested again successfully.
+
+This is a small synthetic engineering evaluation. It is not clinical
+validation, a statistical study, or a production reliability claim. See the
+[evaluation report](docs/EVALUATIONS.md) and
+[`live-agent-results.json`](evals/live-agent-results.json).
+
+## Safety and scope
+
+- Fully synthetic patient and case; fictional insurer, policy, providers,
+  evidence, identifiers, approval, and receipt.
+- No PHI, uploaded medical record, production authentication, or production
+  database.
+- No real insurer integration, real payer endpoint, or real submission.
+- ACT is simulation only and records a local receipt with no external network
+  request.
+- No medical-necessity decision or appeal-success prediction.
+- No medical or legal advice.
+- No HIPAA-compliance or clinical-validation claim.
+- Prototype software; not production ready.
+
+## Technical stack
+
+| Area | Technology |
+|---|---|
+| Frontend | React 19, TypeScript, CSS, Tailwind/PostCSS tooling |
+| Build and runtime | vinext, Vite 8, Cloudflare runtime tooling, Wrangler |
+| Agent layer | Browser WebMCP, structured tool schemas, shared application state |
+| Companion | Node.js 22, TypeScript, MCP SDK, stdio and Streamable HTTP transports |
+| Validation | Node test runner, ESLint 9, TypeScript 5.9, live-agent evaluation records |
+
+## Local development
+
+Node.js 22.13 or newer is required; the repository has been validated with
+Node.js 22.23.1.
 
 ```bash
 npm ci
 npm run dev
 ```
 
-Then open `http://localhost:3000` (or the port printed by the dev server).
+Open the local URL printed by the development server.
 
-Validation:
+Root validation commands:
 
 ```bash
-npx tsc --noEmit --incremental false --allowImportingTsExtensions
 npm run lint
+npx tsc --noEmit --incremental false --allowImportingTsExtensions
 npm test
 npm run build
 ```
 
-## WebMCP testing
+Companion validation commands:
 
-Use ChatGPT’s in-app browser where WebMCP is supported. In compatible Chrome,
-use the challenge-required WebMCP version/flag/extension setup. Open the case
-route, verify exactly seven tools, and follow the [judge testing instructions](submission/TESTING_INSTRUCTIONS.md).
-
-The UI remains functional when `document.modelContext` is unavailable; the
-human fallback uses the same domain command and still records only a simulation.
-
-## Evals and release evidence
-
-Deterministic tests cover READ/PREPARE/CONTROL/ACT contracts, all adversarial
-reference failures, extra ACT properties, prompt injection, idempotency,
-concurrency, cancellation, finalization, fallback, no-network behavior, and
-rendered routes. Live IAB results currently record 45 rows: 37 PASS, 3 FAIL,
-5 NOT_RUN. The original ACT argument failure remains recorded, and one
-authorized post-fix ACT journey passed; Chrome remains an explicit gap. See
-[evaluation details](docs/EVALUATIONS.md) and
-[`live-agent-results.json`](evals/live-agent-results.json).
-
-<p>
-  <img src="artifacts/release-candidate/landing-desktop-1600x900-local-final.jpg" alt="ASSERA landing page" width="49%" />
-  <img src="artifacts/release-candidate/simulated-receipt-neutral.jpg" alt="ASSERA simulated receipt" width="49%" />
-</p>
+```bash
+cd plugins/assera/server
+npm ci
+npm run typecheck
+npm run build
+npm run check
+```
 
 ## Repository map
 
-- `app/`, `components/` — pages and human UI
-- `data/` — immutable synthetic fixtures
-- `domain/` — deterministic state and safety rules
-- `webmcp/` — seven page-defined tool contracts and registration
-- `tests/`, `evals/` — deterministic and live evaluation evidence
-- `docs/` — architecture, security, release, access, and QA audits
-- `submission/` — Devpost copy, script, shot list, testing, and checklist
-- `artifacts/release-candidate/` — curated visual evidence
+- `app/` — routes and page composition.
+- `components/` — landing and case-workspace UI.
+- `data/` — immutable synthetic fixtures.
+- `domain/` — deterministic readiness, package, approval, and ACT rules.
+- `webmcp/` — seven website tool contracts and registration lifecycle.
+- `tests/` — domain, contract, and rendered-route tests.
+- `evals/` — scenario specifications and observed live-agent results.
+- `docs/` — architecture, evaluation, security, access, sources, and QA.
+- `plugins/assera/` — one-tool read-only ChatGPT companion.
+- `artifacts/release-candidate/` — curated, public-safe product evidence.
 
-## Known limitations
+## Current limitations
 
-One synthetic case; ephemeral in-memory state; no ASSERA-owned production auth,
-database, real insurer integration, or clinical validation. Chrome remains
-unobserved in this environment.
+- One synthetic case and one fictional policy/evidence set.
+- Ephemeral, in-memory workspace state that resets on refresh.
+- No production authentication or database.
+- No real insurer integration or real-world deployment workflow.
+- No clinical validation.
+- Agent behavior remains environment-dependent; the recorded Chrome evaluation
+  gap is disclosed in the evaluation report.
 
-## License and author
+## License
 
 Software source is licensed under [Apache-2.0](LICENSE). The ASSERA name,
 wordmark, and logo remain brand identifiers; see [NOTICE](NOTICE). Third-party
-dependencies keep their own licenses.
+dependencies retain their own licenses.
 
-Created by **Penuel Stanley-Zebulon** for the 2026 WebMCP Challenge.
+## Author
+
+**Penuel Stanley-Zebulon**
+
+B.S. Artificial Intelligence Methods and Applications<br />
+Penn State Harrisburg
+
+Healthcare AI · AI/ML Engineering · Software Engineering · Human-Centered AI
+
+---
+
+**AI assists. The human authorizes.**

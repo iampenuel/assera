@@ -1,49 +1,53 @@
-# Public repository checklist
+# Public repository maintenance checklist
 
-Audit date: 2026-09-01
+Initial audit date: 2026-09-01
 
-## Pre-publication state
+Positioning review: 2026-09-04
 
-- Branch: `main`.
-- Git remote: created only after the final validated release commit.
-- Visibility: Public, explicitly owner-authorized for Phase 08.
-- Source/assets: tracked, including the approved hero and official logos.
-- Generated builds/dependencies/environments: ignored.
-- Canonical release evidence: explicitly allowed under
-  `artifacts/release-candidate/`; other local artifact folders stay ignored.
-- Public-document local paths: none found.
-- Secret/environment files: none found.
+## Current public state
+
+- Default branch: `main`.
+- Repository: `https://github.com/iampenuel/assera`.
+- Visibility: Public.
+- Description: “Human-centered, patient-side healthcare access navigation
+  powered by WebMCP.”
+- Homepage: `https://assera-webmcp.stanleyzebulonp.chatgpt.site`.
+- Source and approved assets are tracked, including the canonical hero and
+  official logos.
+- Generated builds, dependencies, environments, and local QA artifacts are
+  ignored.
+- Curated engineering evidence is explicitly allowed under
+  `artifacts/release-candidate/`; other local artifact folders remain ignored.
+- Public documentation contains no user-home, Downloads, or temporary paths.
+- Secret/environment files are not tracked.
 - Root license: Apache-2.0; `NOTICE` distinguishes software licensing from
   ASSERA brand identifiers.
-- Clean-clone/build result: required from the public URL after push.
 
-## Owner-controlled publication steps
+## Owner-controlled maintenance
 
-1. Create or select the final repository on the owner’s chosen provider; set
-   the default branch to `main`. Do not make it public until the release commit
-   and secret scan are final.
-2. Add the remote, for example `git remote add origin <repository-url>`.
-3. Push the release commit with `git push -u origin main`.
-4. Change repository visibility to Public only with owner approval.
-5. Add description: “Human-centered, patient-side healthcare access navigation
-   powered by WebMCP.”
-6. Add the final public website URL in the repository About field.
-7. Add focused topics such as `webmcp`, `chatgpt`, `react`, `typescript`,
+1. Keep the default branch and visibility changes owner-controlled.
+2. Keep the repository About description focused on human-centered healthcare
+   access, WebMCP, deterministic state, and explicit human approval.
+3. Keep the canonical public website URL in the repository homepage field.
+4. Maintain focused topics such as `webmcp`, `chatgpt`, `react`, `typescript`,
    `accessibility`, and `healthcare-navigation`.
-8. Confirm the host detects Apache-2.0 from root `LICENSE` and renders `NOTICE`.
-9. Confirm README images/links, public URLs, and demo-video URL.
-10. Clone into a clean temporary directory, use Node 22, install from the
-    lockfile, and run typecheck, lint, tests, and build.
-11. Re-run a filename-only secret/local-path scan on the exact pushed commit.
-12. Preserve the final commit SHA and repository URL in Devpost.
+5. Confirm the host detects Apache-2.0 from root `LICENSE` and renders `NOTICE`.
+6. Confirm README images, internal links, public URLs, and evaluation evidence.
+7. For release-level changes, clone into a clean temporary directory, use Node
+   22, install from the lockfile, and run typecheck, lint, tests, and build.
+8. Run a filename-only secret/local-path scan before publishing a release or
+   sharing a source archive.
 
 ## Public-content guardrails
 
 - Never commit Sites credentials, bypass tokens, environment files, user-home
   paths, temporary archives, or unrelated QA captures.
+- Do not claim OpenAI endorsement or describe ASSERA as an OpenAI product.
 - Do not claim HIPAA compliance, clinical validation, legal advice, medical
   necessity, appeal success, or real insurer integration.
-- Keep the repository’s synthetic-data statement visible.
+- Keep the repository’s synthetic-data and simulation-only disclosures visible.
+- Preserve the exact seven WebMCP site tools, human-only CONTROL boundary, and
+  one-tool read-only companion architecture.
 
-**REPOSITORY PUBLICATION GATE — OWNER AUTHORIZED**. The Phase 08 release is
-complete only after the public push and independent public-clone verification.
+**PUBLIC REPOSITORY STATUS — PUBLIC**. Current project documentation presents
+ASSERA as a standalone personal engineering project.

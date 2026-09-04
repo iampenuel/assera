@@ -35,10 +35,8 @@ while the API requirements—including denial reasons in Prior Authorization API
 responses—generally begin January 1, 2027. ASSERA does not claim that every
 specific-denial-reason API obligation begins in 2026.
 
-## Challenge and WebMCP guidance
+## WebMCP guidance
 
-- [WebMCP Challenge rules](https://webmcp.devpost.com/rules) — browser eligibility,
-  judge access, public repository/license, and under-three-minute public demo.
 - [Chrome WebMCP best practices](https://developer.chrome.com/docs/ai/webmcp/best-practices)
   — clear, distinct, positive tool metadata and strict capability boundaries.
 - [Chrome WebMCP eval guidance](https://developer.chrome.com/docs/ai/webmcp/evals)

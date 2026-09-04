@@ -92,9 +92,9 @@ simulated ACT.
 - **CONTROL** — Maya approved or revoked an exact package version.
 - **ACT** — simulated receipt was recorded, reused, or safely blocked.
 
-## Distribution boundary
+## Website and companion boundary
 
-WebMCP is the hackathon’s core integration: seven tools live in the page and
+WebMCP is a core architectural integration: seven tools live in the page and
 operate on the page’s current state. The repository also includes a branded
 ChatGPT companion with one read-only MCP launcher tool, `show_assera_demo`, and
 the resource `ui://widget/assera-demo-v3.html`. The companion does not read,

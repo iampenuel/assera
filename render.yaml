@@ -3,7 +3,7 @@ services:
     name: assera-companion-mcp
     runtime: node
     # Preview only: Render Free sleeps when idle. Upgrade to 0.5c-512mb only
-    # after explicit owner approval and before a production directory submission.
+    # after explicit owner approval when continuous availability is required.
     plan: free
     rootDir: plugins/assera
     buildCommand: npm --prefix server ci && npm --prefix server run build

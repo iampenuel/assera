@@ -1,13 +1,13 @@
 # Accessibility QA
 
 Review date: 2026-09-01
-Surface: public Sites version 10 plus final Phase 07C/07D source and visual QA
+Surface: public Sites version 10 plus the validated source and visual QA build
 
 Overall status: **CONDITIONAL PASS**. No blocking semantic, labeling, focus-style,
 contrast-signaling, or mobile-overflow defect was found. Automated Tab-key
 traversal is `NOT_RUN`: the connected browser accepted key commands but did not
 advance `document.activeElement`, so a final manual keyboard pass is still
-required before public submission.
+required before the accessibility review is marked complete.
 
 ## Journey evidence
 
@@ -38,7 +38,7 @@ simulated receipt, finalized package, and READ/PREPARE/CONTROL/ACT activity.
 
 ## Manual keyboard completion checklist
 
-Run once in the final public candidate without a mouse:
+Run once in the current public build without a mouse:
 
 1. Tab to Open Maya’s case and press Enter.
 2. Open Case menu at narrow width; traverse each anchor and close it.
