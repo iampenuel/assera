@@ -51,7 +51,13 @@ export async function generateMetadata(): Promise<Metadata> {
       images: [socialImage],
     },
     icons: {
-      icon: "/brand/assera-favicon.png",
+      // vinext prepends the app/favicon.ico fallback automatically.
+      icon: {
+        url: "/brand/assera-favicon-v2.png",
+        type: "image/png",
+        sizes: "512x512",
+      },
+      shortcut: "/brand/assera-favicon-v2.png",
     },
   };
 }
