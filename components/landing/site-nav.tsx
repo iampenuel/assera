@@ -28,7 +28,12 @@ export function SiteNav() {
       <div className="hero-mobile-actions">
         <CasePill />
         <details className="hero-mobile-menu">
-          <summary aria-label="Open navigation menu">Menu</summary>
+          <summary aria-label="Open navigation menu">
+            <svg aria-hidden="true" viewBox="0 0 28 20">
+              <path d="M1 5H27" />
+              <path d="M5 15H23" />
+            </svg>
+          </summary>
           <nav aria-label="Mobile navigation">
             {navItems.map((item) => (
               <a key={item.href} href={item.href}>{item.label}</a>

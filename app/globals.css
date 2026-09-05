@@ -465,6 +465,7 @@ button { cursor: pointer; }
   background: rgba(255, 253, 249, .72);
 }
 .case-topbar-leading { display: contents; }
+.case-mobile-brand-row { display: contents; }
 .workspace-context { margin-left: auto; display: flex; align-items: center; gap: 9px; color: var(--muted); font-size: 13px; }
 .lock-symbol {
   width: 13px; height: 11px; position: relative; display: inline-block;
@@ -947,10 +948,9 @@ button { cursor: pointer; }
   }
   .hero-mobile-actions .open-case-arrow { width: 42px; height: 42px; }
   .hero-mobile-menu { position: relative; }
-  .hero-mobile-menu summary { width: 54px; height: 54px; display: grid; place-items: center; border: 1px solid rgba(247, 239, 225, .45); border-radius: 50%; color: transparent; font-size: 0; list-style: none; cursor: pointer; }
+  .hero-mobile-menu summary { width: 54px; height: 54px; display: grid; place-items: center; border: 1px solid rgba(247, 239, 225, .45); border-radius: 50%; color: var(--ivory); font-size: 0; list-style: none; cursor: pointer; }
   .hero-mobile-menu summary::-webkit-details-marker { display: none; }
-  .hero-mobile-menu summary::before { content: ""; width: 17px; height: 11px; border-top: 1.5px solid var(--ivory); border-bottom: 1.5px solid var(--ivory); }
-  .hero-mobile-menu summary::after { content: ""; width: 17px; height: 1.5px; position: absolute; top: 26px; background: var(--ivory); }
+  .hero-mobile-menu summary svg { width: 28px; height: 20px; display: block; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
   .hero-mobile-menu nav { min-width: 190px; padding: 10px; position: absolute; z-index: 10; top: 62px; right: 0; display: grid; border: 1px solid rgba(247, 239, 225, .3); border-radius: 10px; background: rgba(33, 28, 24, .97); box-shadow: 0 18px 45px rgba(0, 0, 0, .25); }
   .hero-mobile-menu nav a { min-height: 46px; padding: 0 12px; display: flex; align-items: center; color: var(--ivory); font-size: 14px; text-decoration: none; }
   .hero-photo { object-position: 48% center; }
@@ -976,12 +976,12 @@ button { cursor: pointer; }
   .hero-principles small { margin-top: 12px; font-size: 14px; line-height: 1.4; }
   .hero-word {
     width: calc(100% - 40px);
-    margin: clamp(24px, 6vw, 32px) auto 0;
+    margin: clamp(30px, 8vw, 36px) auto 0;
     position: relative;
     left: auto;
     bottom: auto;
-    font-size: clamp(78px, 22.8vw, 156px);
-    line-height: .82;
+    font-size: clamp(80px, 21.5vw, 93px);
+    line-height: 1;
     letter-spacing: -.055em;
     text-align: center;
   }
@@ -1024,33 +1024,32 @@ button { cursor: pointer; }
 @media (max-width: 720px) {
   .case-shell { grid-template-rows: auto auto auto; }
   .case-topbar {
-    min-height: 102px;
     padding: 16px 20px;
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
-    gap: 14px;
+    gap: 16px;
     align-items: center;
   }
   .case-topbar-leading {
     min-width: 0;
     position: relative;
-    display: grid;
-    grid-template-columns: 36px minmax(0, 1fr);
-    grid-template-rows: auto auto;
-    column-gap: 13px;
+    display: flex;
+    align-items: flex-start;
+    flex-direction: column;
     row-gap: 8px;
   }
-  .case-mobile-logo { width: 36px; height: 36px; grid-column: 1; grid-row: 1; }
-  .case-mobile-logo img { width: 36px; height: 36px; }
-  .case-mobile-menu { position: static; grid-column: 2; grid-row: 1; }
-  .case-mobile-menu summary { min-height: 36px; font-size: 18px; }
+  .case-mobile-brand-row { display: flex; align-items: center; gap: 11px; }
+  .case-mobile-logo { width: 42px; height: 42px; }
+  .case-mobile-logo img { width: 42px; height: 42px; }
+  .case-mobile-menu { position: static; }
+  .case-mobile-menu summary { min-height: 42px; font-size: 21px; }
   .case-mobile-menu[open] .case-navigation { width: min(320px, calc(100vw - 40px)); top: calc(100% + 10px); right: auto; left: 0; }
-  .workspace-context { grid-column: 1 / -1; grid-row: 2; }
+  .workspace-context { width: max-content; }
   .workspace-context .lock-symbol { display: none; }
   .workspace-context > span:nth-child(2) { display: none; }
-  .synthetic-badge { max-width: none; margin-left: 0; padding: 7px 12px; font-size: 13px; line-height: 1; white-space: nowrap; text-align: left; }
-  .patient-profile { margin-left: 0; align-self: center; }
-  .patient-avatar { width: 54px; height: 54px; font-size: 18px; }
+  .synthetic-badge { max-width: none; margin-left: 0; padding: 8px 13px; flex-shrink: 0; font-size: 13px; line-height: 1; white-space: nowrap; text-align: left; }
+  .patient-profile { margin-left: 0; grid-column: 2; grid-row: 1; align-self: center; }
+  .patient-avatar { width: 52px; height: 52px; font-size: 18px; }
   .patient-profile > span:last-child { display: none; }
   .case-main-column { padding: 22px 20px 14px; }
   .case-right-rail { padding-right: 20px; padding-left: 20px; }
@@ -1109,7 +1108,6 @@ button { cursor: pointer; }
   .hero-right-column { margin-top: clamp(292px, 78vw, 336px); }
   .hero-copy h1 { font-size: clamp(48px, 13.1vw, 56px); }
   .hero-actions { gap: 16px; }
-  .hero-word { font-size: clamp(78px, 22.8vw, 98px); }
   .case-main-column, .case-right-rail { padding-left: 20px; padding-right: 20px; }
   .case-surface { padding: 18px 14px 14px; }
   .explanation-halves article { padding: 18px 16px; }

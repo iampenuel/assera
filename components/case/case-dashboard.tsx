@@ -132,18 +132,20 @@ export function CaseDashboard({ caseId }: { readonly caseId: string }) {
       />
       <header className="case-topbar">
         <div className="case-topbar-leading">
-          <AsseraLogo className="case-mobile-logo" />
-          <details className="case-mobile-menu">
-            <summary>Case menu</summary>
-            <CaseNavigation
-              mobile
-              activityCount={snapshot.activities.length}
-              evidenceCount={snapshot.effectiveEvidence.length}
-              readiness={snapshot.readiness}
-              hasDraft={snapshot.appealDraft !== null}
-              hasSubmission={snapshot.appealSubmission !== null}
-            />
-          </details>
+          <div className="case-mobile-brand-row">
+            <AsseraLogo className="case-mobile-logo" />
+            <details className="case-mobile-menu">
+              <summary>Case menu</summary>
+              <CaseNavigation
+                mobile
+                activityCount={snapshot.activities.length}
+                evidenceCount={snapshot.effectiveEvidence.length}
+                readiness={snapshot.readiness}
+                hasDraft={snapshot.appealDraft !== null}
+                hasSubmission={snapshot.appealSubmission !== null}
+              />
+            </details>
+          </div>
           <div className="workspace-context">
             <span className="lock-symbol" aria-hidden="true">⌑</span>
             <span>Private case workspace</span>
